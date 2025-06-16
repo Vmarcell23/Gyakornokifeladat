@@ -1,4 +1,5 @@
 using GyakorlatiFeladat.DataContext.Context;
+using GyakorlatiFeladat.Services;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using System;
@@ -18,13 +19,31 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+
+builder.Services.AddScoped<IUserService, UserService>();
+
+//AutoMapper Config
+builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
+
+//Swagger Config
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "Gyakorlati Feladat API",
+        Version = "v1"
+    });
+});
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.UseSwagger();
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "FAMILY APP API v1"));
 }
 
 app.UseHttpsRedirection();
