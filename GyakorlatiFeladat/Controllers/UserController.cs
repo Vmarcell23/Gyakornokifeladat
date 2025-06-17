@@ -2,6 +2,7 @@
 using GyakorlatiFeladat.DataContext.Dtos;
 using GyakorlatiFeladat.DataContext.Entities;
 using GyakorlatiFeladat.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +26,7 @@ namespace GyakorlatiFeladat.Controllers
 
 
         [HttpPost("register")]
-        public async Task<IActionResult> CreateUser([FromBody] UserDto user)
+        public async Task<IActionResult> CreateUser([FromBody] UserRegisterDto user)
         {
             try
             {
@@ -38,10 +39,25 @@ namespace GyakorlatiFeladat.Controllers
                 return BadRequest(e.Message);
             }
         }
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] UserLoginDto user)
+        {
+            try
+            {
+                var result = await _userService.Login(user);
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
 
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers()
         {
+
             var result = await _userService.GetAll();
             return Ok(result);
         }

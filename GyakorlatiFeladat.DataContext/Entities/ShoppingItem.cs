@@ -14,5 +14,7 @@ namespace GyakorlatiFeladat.DataContext.Entities
         public bool IsNeeded { get; set; }
 
         public List<ShoppingItemVote> Votes { get; set; } = new();
+        public int FamilyId { get; set; }
+        public Family Family { get; set; }
     }
 }

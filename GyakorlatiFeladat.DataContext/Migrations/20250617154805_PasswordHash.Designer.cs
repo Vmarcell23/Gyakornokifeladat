@@ -3,6 +3,7 @@ using System;
 using GyakorlatiFeladat.DataContext.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GyakorlatiFeladat.DataContext.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250617154805_PasswordHash")]
+    partial class PasswordHash
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.6");
@@ -30,29 +33,6 @@ namespace GyakorlatiFeladat.DataContext.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Families");
-                });
-
-            modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.FamilyInvite", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("FamilyId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsAccepted")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("SentAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("FamilyInvites");
                 });
 
             modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.FamilyUsers", b =>

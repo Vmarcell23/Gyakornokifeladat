@@ -9,5 +9,7 @@
         public bool IsDone { get; set; }
 
         public List<User> Users { get; set; } = new();
+        public int FamilyId { get; set; }
+        public Family Family { get; set; }
     }
 }

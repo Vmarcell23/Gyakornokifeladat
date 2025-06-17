@@ -3,6 +3,7 @@ using System;
 using GyakorlatiFeladat.DataContext.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GyakorlatiFeladat.DataContext.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250617145244_Families")]
+    partial class Families
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.6");
@@ -23,60 +26,20 @@ namespace GyakorlatiFeladat.DataContext.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.PrimitiveCollection<string>("AdminIds")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
                     b.ToTable("Families");
-                });
-
-            modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.FamilyInvite", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("FamilyId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsAccepted")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("SentAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("FamilyInvites");
-                });
-
-            modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.FamilyUsers", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("FamilyId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Role")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FamilyId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("FamilyUsers");
                 });
 
             modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.ShoppingItem", b =>
@@ -164,41 +127,33 @@ namespace GyakorlatiFeladat.DataContext.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("FamilyId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("TaskItemId")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("TaskItemId");
+                    b.HasIndex("FamilyId");
 
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.FamilyUsers", b =>
+            modelBuilder.Entity("TaskItemUser", b =>
                 {
-                    b.HasOne("GyakorlatiFeladat.DataContext.Entities.Family", "Family")
-                        .WithMany("FamilyUsers")
-                        .HasForeignKey("FamilyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<int>("TasksId")
+                        .HasColumnType("INTEGER");
 
-                    b.HasOne("GyakorlatiFeladat.DataContext.Entities.User", "User")
-                        .WithMany("FamilyUsers")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<int>("UsersId")
+                        .HasColumnType("INTEGER");
 
-                    b.Navigation("Family");
+                    b.HasKey("TasksId", "UsersId");
 
-                    b.Navigation("User");
+                    b.HasIndex("UsersId");
+
+                    b.ToTable("TaskItemUser");
                 });
 
             modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.ShoppingItem", b =>
@@ -234,33 +189,40 @@ namespace GyakorlatiFeladat.DataContext.Migrations
 
             modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.User", b =>
                 {
-                    b.HasOne("GyakorlatiFeladat.DataContext.Entities.TaskItem", null)
+                    b.HasOne("GyakorlatiFeladat.DataContext.Entities.Family", "Family")
                         .WithMany("Users")
-                        .HasForeignKey("TaskItemId");
+                        .HasForeignKey("FamilyId");
+
+                    b.Navigation("Family");
+                });
+
+            modelBuilder.Entity("TaskItemUser", b =>
+                {
+                    b.HasOne("GyakorlatiFeladat.DataContext.Entities.TaskItem", null)
+                        .WithMany()
+                        .HasForeignKey("TasksId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GyakorlatiFeladat.DataContext.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UsersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.Family", b =>
                 {
-                    b.Navigation("FamilyUsers");
-
                     b.Navigation("ShoppingItems");
 
                     b.Navigation("TaskItems");
+
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.ShoppingItem", b =>
                 {
                     b.Navigation("Votes");
-                });
-
-            modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.TaskItem", b =>
-                {
-                    b.Navigation("Users");
-                });
-
-            modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.User", b =>
-                {
-                    b.Navigation("FamilyUsers");
                 });
 #pragma warning restore 612, 618
         }

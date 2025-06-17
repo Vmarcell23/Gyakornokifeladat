@@ -14,19 +14,34 @@ namespace GyakorlatiFeladat.Services
         public AutoMapperProfile() 
         {
             CreateMap<User, UserDto>();
-            CreateMap<UserDto, User>();
+            CreateMap<UserRegisterDto, User>();
 
             CreateMap<TaskItemCreateDto, TaskItem>()
-                .BeforeMap((src, dest) => dest.IsDone = false);
+                .ForMember(dest => dest.IsDone, opt => opt.MapFrom(src => false)); ;
             CreateMap<TaskItem, TaskItemDto>();
 
             CreateMap<ShoppingItem, ShoppingItemDto>()
                 .ForMember(dest => dest.Votes,opt => opt.MapFrom(src => src.Votes.Count));
             CreateMap<ShoppingItemCreateDto, ShoppingItem>()
-                .BeforeMap((src, dest) => dest.IsNeeded = false);
+                .ForMember(dest => dest.IsNeeded, opt => opt.MapFrom(src => false));
 
             CreateMap<ShoppingItemCreateVoteDto, ShoppingItemVote>();
             CreateMap<ShoppingItemVote,ShoppingItemCreateVoteDto>();
+
+            CreateMap<FamilyCreateDto, Family>();
+
+            CreateMap<FamilyUsers, FamilyUserDto>()
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.User.FullName))
+                .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role.ToString()));
+
+            CreateMap<Family, FamilyDto>()
+                .ForMember(dest => dest.OwnerId, opt => opt.MapFrom(src =>
+                    src.FamilyUsers.FirstOrDefault(fu => fu.Role == Roles.Owner).UserId))
+                .ForMember(dest => dest.Members, opt => opt.MapFrom(src => src.FamilyUsers));
+
+            CreateMap<FamilyInvite, FamilyInviteDto>();
+
         }
     }
 }
