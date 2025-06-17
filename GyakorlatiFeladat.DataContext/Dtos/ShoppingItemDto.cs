@@ -13,7 +13,7 @@ namespace GyakorlatiFeladat.DataContext.Dtos
         public int? Quantity { get; set; }
         public bool IsNeeded { get; set; }
 
-        public List<ShoppingItemVote> Votes { get; set; }
+        public int Votes { get; set; }
     }
 
     public class ShoppingItemCreateDto
@@ -21,5 +21,11 @@ namespace GyakorlatiFeladat.DataContext.Dtos
         public string Name { get; set; }
         public int? Quantity { get; set; }
 
+    }
+
+    public class ShoppingItemCreateVoteDto
+    {
+        public int UserId { get; set; }
+        public int ShoppingItemId { get; set; }
     }
 }

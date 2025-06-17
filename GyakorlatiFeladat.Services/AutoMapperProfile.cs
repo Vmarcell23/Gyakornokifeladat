@@ -20,9 +20,13 @@ namespace GyakorlatiFeladat.Services
                 .BeforeMap((src, dest) => dest.IsDone = false);
             CreateMap<TaskItem, TaskItemDto>();
 
-            CreateMap<ShoppingItem, ShoppingItemDto>();
+            CreateMap<ShoppingItem, ShoppingItemDto>()
+                .ForMember(dest => dest.Votes,opt => opt.MapFrom(src => src.Votes.Count));
             CreateMap<ShoppingItemCreateDto, ShoppingItem>()
                 .BeforeMap((src, dest) => dest.IsNeeded = false);
+
+            CreateMap<ShoppingItemCreateVoteDto, ShoppingItemVote>();
+            CreateMap<ShoppingItemVote,ShoppingItemCreateVoteDto>();
         }
     }
 }
