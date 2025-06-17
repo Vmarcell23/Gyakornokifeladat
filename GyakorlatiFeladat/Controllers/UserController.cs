@@ -60,7 +60,7 @@ namespace GyakorlatiFeladat.Controllers
             }
         }
 
-        [HttpPut("{id}/email")]
+        [HttpPut("email/{id}")]
         public async Task<IActionResult> UpdateEmail(int id, [EmailAddress] string email)
         {
             try
@@ -74,7 +74,7 @@ namespace GyakorlatiFeladat.Controllers
             }
         }
 
-        [HttpDelete("{id}/delete")]
+        [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteById(int id)
         {
             try

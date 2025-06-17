@@ -21,6 +21,8 @@ builder.Services.AddOpenApi();
 
 
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ITaskItemService, TaskItemService>();
+builder.Services.AddScoped<IShoppingItemService, ShoppingItemService>();
 
 //AutoMapper Config
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile));

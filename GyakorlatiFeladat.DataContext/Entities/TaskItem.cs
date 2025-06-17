@@ -8,6 +8,6 @@
         public DateTime DueDate { get; set; }
         public bool IsDone { get; set; }
 
-        public List<User> Users { get; set; }
+        public List<User> Users { get; set; } = new();
     }
 }

@@ -92,6 +92,8 @@ namespace GyakorlatiFeladat.Services
             return _mapper.Map<UserDto>(user);
         }
 
+
+        //Belső függvény
         private User findbyid(int id)
         {
             var user = _context.Users.Find(id);

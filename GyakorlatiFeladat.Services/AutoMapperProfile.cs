@@ -15,6 +15,14 @@ namespace GyakorlatiFeladat.Services
         {
             CreateMap<User, UserDto>();
             CreateMap<UserDto, User>();
+
+            CreateMap<TaskItemCreateDto, TaskItem>()
+                .BeforeMap((src, dest) => dest.IsDone = false);
+            CreateMap<TaskItem, TaskItemDto>();
+
+            CreateMap<ShoppingItem, ShoppingItemDto>();
+            CreateMap<ShoppingItemCreateDto, ShoppingItem>()
+                .BeforeMap((src, dest) => dest.IsNeeded = false);
         }
     }
 }

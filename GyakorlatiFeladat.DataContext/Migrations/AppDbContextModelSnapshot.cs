@@ -35,7 +35,7 @@ namespace GyakorlatiFeladat.DataContext.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ShoppingItems");
+                    b.ToTable("ShoppingItems", (string)null);
                 });
 
             modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.ShoppingItemVote", b =>
@@ -54,7 +54,7 @@ namespace GyakorlatiFeladat.DataContext.Migrations
 
                     b.HasIndex("ShoppingItemId");
 
-                    b.ToTable("ShoppingItemVote");
+                    b.ToTable("ShoppingItemVote", (string)null);
                 });
 
             modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.TaskItem", b =>
@@ -79,7 +79,7 @@ namespace GyakorlatiFeladat.DataContext.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tasks");
+                    b.ToTable("Tasks", (string)null);
                 });
 
             modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.User", b =>
@@ -98,7 +98,7 @@ namespace GyakorlatiFeladat.DataContext.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("TaskItemUser", b =>
@@ -113,7 +113,7 @@ namespace GyakorlatiFeladat.DataContext.Migrations
 
                     b.HasIndex("UsersId");
 
-                    b.ToTable("TaskItemUser");
+                    b.ToTable("TaskItemUser", (string)null);
                 });
 
             modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.ShoppingItemVote", b =>

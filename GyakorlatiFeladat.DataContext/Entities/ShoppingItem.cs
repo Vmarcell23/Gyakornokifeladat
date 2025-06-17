@@ -10,9 +10,9 @@ namespace GyakorlatiFeladat.DataContext.Entities
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public int Quantity { get; set; }
+        public int? Quantity { get; set; }
         public bool IsNeeded { get; set; }
 
-        public List<ShoppingItemVote> Votes { get; set; }
+        public List<ShoppingItemVote> Votes { get; set; } = new();
     }
 }
