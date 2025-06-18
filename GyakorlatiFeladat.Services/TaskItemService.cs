@@ -29,38 +29,37 @@ namespace GyakorlatiFeladat.Services
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
-        public TaskItemService(AppDbContext context, IMapper mapper)
+        private readonly IClaimsHandler _claimsHandler;
+        public TaskItemService(AppDbContext context, IMapper mapper,IClaimsHandler claimsHandler)
         {
             _context = context;
             _mapper = mapper;
+            _claimsHandler = claimsHandler;
         }
 
         public async Task<TaskItemDto> CreateTask(TaskItemCreateDto creatDto, ClaimsPrincipal user)
         {
             if (string.IsNullOrWhiteSpace(creatDto.TaskName) || string.IsNullOrWhiteSpace(creatDto.TaskDesc))
                 throw new ArgumentException("TaskName and TaskDesc are required");
-
-            var familyIdClaim = user.Claims.FirstOrDefault(c => c.Type == "FamilyId");
-            var familyId = int.Parse(familyIdClaim.Value);
-            if (familyIdClaim == null)
-                throw new UnauthorizedAccessException("You are not a member of any family.");
-
+            
+            var familyId = _claimsHandler.GetFamilyId(user);
+            
             var taskItem = _mapper.Map<TaskItem>(creatDto);
             if (taskItem == null)
                 throw new ArgumentNullException(nameof(creatDto));
 
+            var allUsersOfFamily = await _context.FamilyUsers
+                .Where(fu => fu.FamilyId == familyId && creatDto.UserIds.Contains(fu.UserId))
+                .ToListAsync();
 
-            var userisfamlymember = _context.FamilyUsers
-                .Where(u => creatDto.UserIds.Contains(u.Id));
-
-            var users = await _context.Users
+            var allUsersAssigned = await _context.Users
                 .Where(u => creatDto.UserIds.Contains(u.Id))
                 .ToListAsync();
             
-            if(users.Count() != userisfamlymember.Count())
+            if(allUsersAssigned.Count() != allUsersOfFamily.Count())
                 throw new UnauthorizedAccessException("You can only assign tasks to users who are members of your family.");
 
-            taskItem.Users.AddRange(users);
+            taskItem.Users.AddRange(allUsersAssigned);
             taskItem.FamilyId = familyId;
 
             await _context.AddAsync(taskItem);
@@ -78,11 +77,8 @@ namespace GyakorlatiFeladat.Services
 
         public async Task<List<TaskItemDto>> GetAllInFamily(ClaimsPrincipal user)
         {
-            var familyIdClaim = user.Claims.FirstOrDefault(c => c.Type == "FamilyId");
-            if (familyIdClaim == null)
-                throw new UnauthorizedAccessException("You are not a member of any family.");
-            var familyId = int.Parse(familyIdClaim.Value);
-            
+          var familyId = _claimsHandler.GetFamilyId(user);
+
             var familyTasks = await _context.Tasks
                 .Include(t => t.Users)
                 .Where(t => t.FamilyId == familyId)
@@ -108,24 +104,15 @@ namespace GyakorlatiFeladat.Services
 
         public async Task<List<TaskItemDto>> GetTaskByLogedUser(ClaimsPrincipal user)
         {
-            var userIdClaim = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-                throw new UnauthorizedAccessException();
-            int userId = int.Parse(userIdClaim.Value);
+            var userId = _claimsHandler.GetUserId(user);
             return await GetTasksByUserId(userId);
         }
 
         public async Task<TaskItemDto> Check(int id, ClaimsPrincipal user)
         {
-            var userIdClaim = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-                throw new UnauthorizedAccessException("You are not logged in.");
-            var familyIdClaim = user.Claims.FirstOrDefault(c => c.Type == "FamilyId");
-            if (familyIdClaim == null)
-                throw new UnauthorizedAccessException("You are not a member of any family.");
-            
-            var userId = int.Parse(userIdClaim.Value);
-            var familyId = int.Parse(familyIdClaim.Value);
+            var userId = _claimsHandler.GetUserId(user);
+            var familyId = _claimsHandler.GetFamilyId(user);
+
             var taskItem = await _context.Tasks
                 .Include(t => t.Users)
                 .FirstOrDefaultAsync(t => t.Id == id && t.FamilyId == familyId);
@@ -143,15 +130,16 @@ namespace GyakorlatiFeladat.Services
         {
             if (string.IsNullOrWhiteSpace(updateDto.TaskName) || string.IsNullOrWhiteSpace(updateDto.TaskDesc))
                 throw new ArgumentException("TaskName and TaskDesc are required");
+            
+            var familyId = _claimsHandler.GetFamilyId(user);
 
-            var FamilyClaimId = user.Claims.FirstOrDefault(c => c.Type == "FamilyId");
-            var familyId = int.Parse(FamilyClaimId.Value);
             var taskItem = findbyid(id);
             if (taskItem.FamilyId != familyId)
                 throw new UnauthorizedAccessException("You do not have permission to update this task.");
 
-            var userisfamlymember = _context.FamilyUsers
-                .Where(u => updateDto.UserIds.Contains(u.Id));
+            var userisfamlymember = await _context.FamilyUsers
+                .Where(fu => fu.FamilyId == familyId && updateDto.UserIds.Contains(fu.UserId))
+                .ToListAsync();
             var users = await _context.Users
                 .Where(u => updateDto.UserIds.Contains(u.Id))
                 .ToListAsync();
@@ -170,10 +158,9 @@ namespace GyakorlatiFeladat.Services
 
         public async Task<TaskItemDto> DeleteTask(int id, ClaimsPrincipal user)
         {
-            var familyIdClaim = user.Claims.FirstOrDefault(c => c.Type == "FamilyId");
-            var familyId = int.Parse(familyIdClaim.Value);
-
+            var familyId = _claimsHandler.GetFamilyId(user);
             var taskItem = findbyid(id);
+
             if (taskItem.FamilyId != familyId)
                 throw new UnauthorizedAccessException("You do not have permission to delete this task.");
 

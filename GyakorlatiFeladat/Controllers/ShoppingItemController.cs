@@ -1,5 +1,6 @@
 ﻿using GyakorlatiFeladat.DataContext.Dtos;
 using GyakorlatiFeladat.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,12 +17,13 @@ namespace GyakorlatiFeladat.Controllers
             _shoppingItemService = shoppingItemService;
         }
 
+        [Authorize]
         [HttpPost("create")]
         public async Task<IActionResult> CreateItem([FromBody] ShoppingItemCreateDto shoppingItemCreateDto)
         {
             try
             {
-                var result = await _shoppingItemService.Create(shoppingItemCreateDto);
+                var result = await _shoppingItemService.Create(shoppingItemCreateDto,User);
                 return Ok(result);
             }
             catch (Exception e)
@@ -44,6 +46,20 @@ namespace GyakorlatiFeladat.Controllers
                 return BadRequest(e.Message);
             }
         }
+        [Authorize]
+        [HttpGet("items/my-family")]
+        public async Task<IActionResult> GetAllItemsInFamily()
+        {
+            try
+            {
+                var result = await _shoppingItemService.GetAllInFamily(User);
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
 
         [HttpGet("item/{id}")]
         public async Task<IActionResult> GetItemById(int id)
@@ -59,12 +75,13 @@ namespace GyakorlatiFeladat.Controllers
             }
         }
 
+        [Authorize]
         [HttpPut("vote")]
-        public async Task<IActionResult> VoteItem([FromBody] ShoppingItemCreateVoteDto voteDto)
+        public async Task<IActionResult> VoteItem(int itemId)
         {
             try
             {
-                var result = await _shoppingItemService.Vote(voteDto);
+                var result = await _shoppingItemService.Vote(itemId,User);
                 return Ok(result);
             }
             catch (Exception e)
@@ -78,7 +95,7 @@ namespace GyakorlatiFeladat.Controllers
         {
             try
             {
-                var result = await _shoppingItemService.Update(id, updateDto);
+                var result = await _shoppingItemService.Update(id, updateDto,User);
                 return Ok(result);
             }
             catch (Exception e)
@@ -92,7 +109,7 @@ namespace GyakorlatiFeladat.Controllers
         {
             try
             {
-                var result = await _shoppingItemService.Delete(id);
+                var result = await _shoppingItemService.Delete(id,User);
                 return Ok(result);
             }
             catch (Exception e)

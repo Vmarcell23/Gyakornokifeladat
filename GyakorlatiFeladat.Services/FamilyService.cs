@@ -10,6 +10,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.VisualBasic;
 
 namespace GyakorlatiFeladat.Services
 {
@@ -24,26 +25,29 @@ namespace GyakorlatiFeladat.Services
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
-        public FamilyService (AppDbContext context, IMapper mapper)
+        private readonly IClaimsHandler _claimsHandler;
+        public FamilyService (AppDbContext context, IMapper mapper, IClaimsHandler claimsHandler)
         {
             _context = context;
             _mapper = mapper;
+            _claimsHandler = claimsHandler;
         }
 
         public async Task<FamilyDto> Create(FamilyCreateDto createDto, ClaimsPrincipal user)
         {
 
-            var userIdClaim = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-                throw new UnauthorizedAccessException();
-
-            int userId = int.Parse(userIdClaim.Value);
-            int existingFamilyId = await _context.FamilyUsers
-                .Where(fu => fu.UserId == userId)
-                .Select(fu => fu.FamilyId)
-                .FirstOrDefaultAsync();
-            if (existingFamilyId > 0)
+            var userId = _claimsHandler.GetUserId(user);
+            var familyIdClaim = user.Claims.FirstOrDefault(c => c.Type == "FamilyId");
+            if (familyIdClaim != null)
+            {
                 throw new InvalidOperationException("You are already a member of a family. You cannot create a new one.");
+            }
+            //int existingFamilyId = await _context.FamilyUsers
+            //    .Where(fu => fu.UserId == userId)
+            //    .Select(fu => fu.FamilyId)
+            //    .FirstOrDefaultAsync();
+            //if (existingFamilyId > 0)
+            //    throw new InvalidOperationException("You are already a member of a family. You cannot create a new one.");
 
             var family = _mapper.Map<Family>(createDto);
             family.FamilyUsers = new List<FamilyUsers>
@@ -72,19 +76,14 @@ namespace GyakorlatiFeladat.Services
 
         public async Task<FamilyDto> MyFamily(ClaimsPrincipal user)
         {
-            var userIdClaim = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-                throw new UnauthorizedAccessException();
-            int userId = int.Parse(userIdClaim.Value);
-            var familyUser = await _context.FamilyUsers
-                .Include(fu => fu.Family)
-                .ThenInclude(f => f.FamilyUsers)
-                .ThenInclude(fu => fu.User)
-                .FirstOrDefaultAsync(fu => fu.UserId == userId);
+            var familyId = _claimsHandler.GetFamilyId(user);
+            var myfamily = await _context.Families
+               .Include(f => f.FamilyUsers)
+               .ThenInclude(f => f.User)
+               .Where(f => f.Id == familyId)
+               .FirstOrDefaultAsync();
 
-            if (familyUser == null)
-                throw new InvalidOperationException("You are not a member of any family.");
-            return _mapper.Map<FamilyDto>(familyUser.Family);
+            return _mapper.Map<FamilyDto>(myfamily);
         }
 
 

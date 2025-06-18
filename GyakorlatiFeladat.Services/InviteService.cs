@@ -22,29 +22,23 @@ namespace GyakorlatiFeladat.Services
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
+        private readonly IClaimsHandler _claimsHandler;
 
-        public InviteService(AppDbContext context, IMapper mapper)
+        public InviteService(AppDbContext context, IMapper mapper, IClaimsHandler claimsHandler)
         {
             _context = context;
             _mapper = mapper;
+            _claimsHandler = claimsHandler;
         }
 
         public async Task<FamilyInviteDto> InviteToFamily(int invUserId, ClaimsPrincipal user)
         {
-            var userIdClaim = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-                throw new UnauthorizedAccessException();
+            var userId = _claimsHandler.GetUserId(user);
+            var familyId = _claimsHandler.GetFamilyId(user);
+            var Role = _claimsHandler.GetUserRole(user);
 
-           
-
-            var familyIdClaim = user.Claims.FirstOrDefault(c => c.Type == "FamilyId");
-            var roleClaim = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role);
-
-            if (familyIdClaim == null || roleClaim == null || roleClaim.Value != "Owner")
+            if ( Role != Roles.Owner)
                 throw new UnauthorizedAccessException("You do not have permission to invite users");
-
-            int userId = int.Parse(userIdClaim.Value);
-            int familyId = int.Parse(familyIdClaim.Value);
 
             if (invUserId == userId)
                 throw new InvalidOperationException("You cannot invite yourself to the family.");
@@ -73,13 +67,8 @@ namespace GyakorlatiFeladat.Services
         }
 
         public async Task<FamilyUserDto> AcceptInvite(bool accept, int familyId, ClaimsPrincipal user)
-        {
-
-            var userIdClaim = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-                throw new UnauthorizedAccessException();
-
-            int userId = int.Parse(userIdClaim.Value);
+        { 
+            var userId = _claimsHandler.GetUserId(user);
 
             var invite = await _context.FamilyInvites
                 .FirstOrDefaultAsync(i => i.FamilyId == familyId && i.UserId == userId);

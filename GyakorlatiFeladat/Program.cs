@@ -30,9 +30,10 @@ builder.Services.AddScoped<ITaskItemService, TaskItemService>();
 builder.Services.AddScoped<IShoppingItemService, ShoppingItemService>();
 builder.Services.AddScoped<IFamilyService, FamilyService>();
 builder.Services.AddScoped<IInviteService, InviteService>();
-
+builder.Services.AddScoped<IClaimsHandler, ClaimsHandler>();    
 //AutoMapper Config
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
+
 
 // ===== Add Jwt Authentication ========
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear(); // => remove default claims

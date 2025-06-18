@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,12 +16,13 @@ namespace GyakorlatiFeladat.Services
 {
     public interface IShoppingItemService
     {
-        Task <List<ShoppingItemDto>> GetAll();
-        Task <ShoppingItemDto> GetById(int id);
-        Task<ShoppingItemDto> Create(ShoppingItemCreateDto shoppingItemCreateDto);
-        Task<ShoppingItemDto> Vote(ShoppingItemCreateVoteDto voteDto);
-        Task<ShoppingItemDto> Update(int id, ShoppingItemCreateDto updateDto);
-        Task<ShoppingItemDto> Delete(int id);
+        Task<List<ShoppingItemDto>> GetAll();
+        Task<List<ShoppingItemDto>> GetAllInFamily(ClaimsPrincipal user);
+        Task<ShoppingItemDto> GetById(int id);
+        Task<ShoppingItemDto> Create(ShoppingItemCreateDto shoppingItemCreateDto,ClaimsPrincipal user);
+        Task<ShoppingItemDto> Vote(int itemId, ClaimsPrincipal user);
+        Task<ShoppingItemDto> Update(int id, ShoppingItemCreateDto updateDto, ClaimsPrincipal user);
+        Task<ShoppingItemDto> Delete(int id, ClaimsPrincipal user);
      
 
     }
@@ -28,19 +30,24 @@ namespace GyakorlatiFeladat.Services
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
-        public ShoppingItemService(AppDbContext context, IMapper mapper)
+        private readonly IClaimsHandler _claimsHandler;
+        public ShoppingItemService(AppDbContext context, IMapper mapper, IClaimsHandler claimsHandler)
         {
             _context = context;
             _mapper = mapper;
+            _claimsHandler = claimsHandler;
         }
-        public async Task<ShoppingItemDto> Create(ShoppingItemCreateDto shoppingItemCreateDto)
+        public async Task<ShoppingItemDto> Create(ShoppingItemCreateDto shoppingItemCreateDto, ClaimsPrincipal user)
         {
             if (shoppingItemCreateDto == null)
                 throw new ArgumentNullException(nameof(shoppingItemCreateDto));
             if (string.IsNullOrWhiteSpace(shoppingItemCreateDto.Name))
                 throw new ArgumentException("ItemName is required");
 
+            var familyId = _claimsHandler.GetFamilyId(user);
+
             var shoppingItem = _mapper.Map<ShoppingItem>(shoppingItemCreateDto);
+            shoppingItem.FamilyId = familyId; 
             await _context.ShoppingItems.AddAsync(shoppingItem);
             await _context.SaveChangesAsync();
             return _mapper.Map<ShoppingItemDto>(shoppingItem);
@@ -53,31 +60,64 @@ namespace GyakorlatiFeladat.Services
             return _mapper.Map<List<ShoppingItemDto>>(shoppingItems);
         }
 
+        public async Task<List<ShoppingItemDto>> GetAllInFamily(ClaimsPrincipal user)
+        {
+           var familyId = _claimsHandler.GetFamilyId(user);
+
+            var shoppingItems = await _context.ShoppingItems
+                .Where(si => si.FamilyId == familyId)
+                .Include(si => si.Votes)
+                .ToListAsync();
+
+            return _mapper.Map<List<ShoppingItemDto>>(shoppingItems);
+        }
+
         public async Task<ShoppingItemDto> GetById(int id)
         {
-            var item = findbyid(id);
+            var item = _context.ShoppingItems
+                   .Include(si => si.Votes)
+                   .FirstOrDefault(si => si.Id == id);
             return _mapper.Map<ShoppingItemDto>(item);  
         }
 
-        public async Task<ShoppingItemDto> Vote(ShoppingItemCreateVoteDto voteDto)
+        public async Task<ShoppingItemDto> Vote(int itemId, ClaimsPrincipal user)
         {
-            var item = findbyid(voteDto.ShoppingItemId);
-            var vote = _mapper.Map<ShoppingItemVote>(voteDto);
+            var userId = _claimsHandler.GetUserId(user);
+            var familyId = _claimsHandler.GetFamilyId(user);
+            
+            var item = await _context.ShoppingItems
+                .FirstOrDefaultAsync(si => si.Id == itemId && si.FamilyId == familyId);
 
-            var uservoted = item.Votes.FirstOrDefault(v => v.UserId == vote.UserId);
-            if (uservoted != null)
+            var vote = new ShoppingItemVote
+            {
+                ShoppingItemId = itemId,
+                UserId = userId,
+            };
+
+            var userNotVoted = item.Votes.FirstOrDefault(v => v.UserId == vote.UserId);
+            if (userNotVoted != null)
                 throw new InvalidOperationException("This user has already voted for this item.");
 
-            item.Votes.Add(vote);
+            var familyMemberCount = await _context.FamilyUsers //Ha mindenki zavasz akkor az IsNeeded true lesz
+                .Where(fu => fu.FamilyId == familyId)
+                .CountAsync();
 
+            item.Votes.Add(vote);
+            if (item.Votes.Count == familyMemberCount)
+            {
+                item.IsNeeded = true;
+            }
             _context.ShoppingItems.Update(item);
             await _context.SaveChangesAsync();
             return _mapper.Map<ShoppingItemDto>(item);
         }
 
-        public async Task<ShoppingItemDto> Update(int id, ShoppingItemCreateDto updateDto)
+        public async Task<ShoppingItemDto> Update(int id, ShoppingItemCreateDto updateDto, ClaimsPrincipal user )
         {
-            var item = findbyid(id);
+            var familyId = _claimsHandler.GetFamilyId(user);
+            var item = await _context.ShoppingItems
+                .FirstOrDefaultAsync(si => si.Id == id && si.FamilyId == familyId);
+
             item = _mapper.Map(updateDto, item);
 
             _context.ShoppingItems.Update(item);
@@ -86,23 +126,16 @@ namespace GyakorlatiFeladat.Services
 
         }
 
-        public async Task<ShoppingItemDto> Delete(int id)
+        public async Task<ShoppingItemDto> Delete(int id,ClaimsPrincipal user)
         {
-            var item = findbyid(id);
+            var familyId = _claimsHandler.GetFamilyId(user);
+            var item = await _context.ShoppingItems
+                .FirstOrDefaultAsync(si => si.Id == id && si.FamilyId == familyId);
+
             _context.ShoppingItems.Remove(item);
             await _context.SaveChangesAsync();
             return _mapper.Map<ShoppingItemDto>(item);
         }
 
-        private ShoppingItem findbyid(int id)
-        { 
-            var item = _context.ShoppingItems
-                .Include(si => si.Votes)
-                .FirstOrDefault(si => si.Id == id);
-            if (item == null)
-                throw new KeyNotFoundException($"Shopping item with ID {id} not found.");
-
-            return item;
-        }
     }
 }

@@ -25,7 +25,7 @@ namespace GyakorlatiFeladat.Services
         public Task<string> Login(UserLoginDto user);
         public Task<UserDto> Me(ClaimsPrincipal userClaim);
         public Task<UserDto> GetById(int id);
-        public Task<UserDto> UpdateEmail(int id ,string email);
+        public Task<UserDto> UpdateEmail(string email, ClaimsPrincipal user);
         public Task<UserDto> DeleteById(int id);
     }
     public class UserService : IUserService
@@ -34,12 +34,14 @@ namespace GyakorlatiFeladat.Services
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
+        private readonly IClaimsHandler _claimsHandler;
 
-        public UserService(AppDbContext context, IMapper mapper, IConfiguration configuration)
+        public UserService(AppDbContext context, IMapper mapper, IConfiguration configuration, IClaimsHandler claimsHandler)
         {
             _context = context;
             _mapper = mapper;
-            _configuration = configuration; 
+            _configuration = configuration;
+            _claimsHandler = claimsHandler;
 
         }
 
@@ -108,13 +110,8 @@ namespace GyakorlatiFeladat.Services
 
         public async Task<UserDto> Me(ClaimsPrincipal userClaim)
         {
-            var userIdClaim = userClaim.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-                throw new UnauthorizedAccessException();
-            int userId = int.Parse(userIdClaim.Value);
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null)
-                throw new KeyNotFoundException("User not found");
+            var userId = _claimsHandler.GetUserId(userClaim);
+            var user = findbyid(userId);
             return _mapper.Map<UserDto>(user);
         }
 
@@ -130,7 +127,7 @@ namespace GyakorlatiFeladat.Services
             return _mapper.Map<UserDto>(user);
         }     
         
-        public async Task<UserDto> UpdateEmail(int id, string email)
+        public async Task<UserDto> UpdateEmail(string email, ClaimsPrincipal claim)
         {
             if (string.IsNullOrWhiteSpace(email))
                 throw new ArgumentException("Email cannot be empty");
@@ -138,7 +135,8 @@ namespace GyakorlatiFeladat.Services
             if (UserWithNewEmail != null)
                 throw new InvalidOperationException("A user with this email already exists");   
 
-            User user = findbyid(id);          
+            var userId = _claimsHandler.GetUserId(claim);
+            var user= findbyid(userId);
             user.Email = email;
             _context.Update(user);
             _context.SaveChangesAsync();

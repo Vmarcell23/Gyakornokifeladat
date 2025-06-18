@@ -95,7 +95,7 @@ namespace GyakorlatiFeladat.Controllers
         {
             try
             {
-                var result = await _userService.UpdateEmail(id, email);
+                var result = await _userService.UpdateEmail(email,User);
                 return Ok(result);
             }
             catch (Exception e)
