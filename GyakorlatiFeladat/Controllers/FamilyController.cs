@@ -31,13 +31,14 @@ namespace GyakorlatiFeladat.Controllers
             var result = await _familyService.GetAll();
             return Ok(result);
         }
+
         [Authorize]
-        [HttpPost("invite")]
-        public async Task<IActionResult> InviteToFamily(int invUserId)
+        [HttpGet("my-family")]
+        public async Task<IActionResult> MyFamily()
         {
             try
             {
-                var result = await _familyService.InviteToFamily(invUserId, User);
+                var result = await _familyService.MyFamily(User);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -45,5 +46,6 @@ namespace GyakorlatiFeladat.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
     }
 }

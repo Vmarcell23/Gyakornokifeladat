@@ -9,6 +9,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
 
 namespace GyakorlatiFeladat.Services
 {
@@ -16,7 +17,8 @@ namespace GyakorlatiFeladat.Services
     {
         Task<List<FamilyDto>> GetAll();
         Task<FamilyDto> Create(FamilyCreateDto createDto,ClaimsPrincipal user);
-        Task<FamilyInviteDto> InviteToFamily(int userId,ClaimsPrincipal user);
+        Task<FamilyDto> MyFamily(ClaimsPrincipal user);
+
     }
     public class FamilyService : IFamilyService
     {
@@ -36,7 +38,12 @@ namespace GyakorlatiFeladat.Services
                 throw new UnauthorizedAccessException();
 
             int userId = int.Parse(userIdClaim.Value);
-
+            int existingFamilyId = await _context.FamilyUsers
+                .Where(fu => fu.UserId == userId)
+                .Select(fu => fu.FamilyId)
+                .FirstOrDefaultAsync();
+            if (existingFamilyId > 0)
+                throw new InvalidOperationException("You are already a member of a family. You cannot create a new one.");
 
             var family = _mapper.Map<Family>(createDto);
             family.FamilyUsers = new List<FamilyUsers>
@@ -63,33 +70,23 @@ namespace GyakorlatiFeladat.Services
             return _mapper.Map<List<FamilyDto>>(families);
         }
 
-        public async Task<FamilyInviteDto> InviteToFamily(int invUserId, ClaimsPrincipal user)
+        public async Task<FamilyDto> MyFamily(ClaimsPrincipal user)
         {
             var userIdClaim = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
                 throw new UnauthorizedAccessException();
-
             int userId = int.Parse(userIdClaim.Value);
+            var familyUser = await _context.FamilyUsers
+                .Include(fu => fu.Family)
+                .ThenInclude(f => f.FamilyUsers)
+                .ThenInclude(fu => fu.User)
+                .FirstOrDefaultAsync(fu => fu.UserId == userId);
 
-            var familyIdClaim = user.Claims.FirstOrDefault(c => c.Type == "FamilyId");
-            var roleClaim = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role);
-
-            if (familyIdClaim == null || roleClaim == null || roleClaim.Value != "Owner")
-                throw new UnauthorizedAccessException("You do not have permission to invite users");
-
-            int familyId = int.Parse(familyIdClaim.Value);
-            
-            var invite = new FamilyInvite
-            {
-                FamilyId = familyId,
-                UserId = invUserId,
-                SentAt = DateTime.UtcNow,
-                IsAccepted = false
-            };
-
-            _context.FamilyInvites.Add(invite);
-            await _context.SaveChangesAsync();
-            return _mapper.Map<FamilyInviteDto>(invite);
+            if (familyUser == null)
+                throw new InvalidOperationException("You are not a member of any family.");
+            return _mapper.Map<FamilyDto>(familyUser.Family);
         }
+
+
     }
 }

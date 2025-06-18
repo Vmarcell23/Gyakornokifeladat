@@ -29,6 +29,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITaskItemService, TaskItemService>();
 builder.Services.AddScoped<IShoppingItemService, ShoppingItemService>();
 builder.Services.AddScoped<IFamilyService, FamilyService>();
+builder.Services.AddScoped<IInviteService, InviteService>();
 
 //AutoMapper Config
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile));

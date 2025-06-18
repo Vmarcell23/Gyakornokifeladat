@@ -53,6 +53,20 @@ namespace GyakorlatiFeladat.Controllers
                 throw;
             }
         }
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<IActionResult> Me()
+        {
+            try
+            {
+                var result = await _userService.Me(User);
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
 
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers()

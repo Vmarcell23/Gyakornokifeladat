@@ -23,6 +23,7 @@ namespace GyakorlatiFeladat.Services
         public Task<List<UserDto>> GetAll();
         public Task<UserDto> Create(UserRegisterDto user);
         public Task<string> Login(UserLoginDto user);
+        public Task<UserDto> Me(ClaimsPrincipal userClaim);
         public Task<UserDto> GetById(int id);
         public Task<UserDto> UpdateEmail(int id ,string email);
         public Task<UserDto> DeleteById(int id);
@@ -105,6 +106,17 @@ namespace GyakorlatiFeladat.Services
             return new ClaimsIdentity(claims, "Token");
         }
 
+        public async Task<UserDto> Me(ClaimsPrincipal userClaim)
+        {
+            var userIdClaim = userClaim.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                throw new UnauthorizedAccessException();
+            int userId = int.Parse(userIdClaim.Value);
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+                throw new KeyNotFoundException("User not found");
+            return _mapper.Map<UserDto>(user);
+        }
 
         public async Task<List<UserDto>> GetAll()
         {
