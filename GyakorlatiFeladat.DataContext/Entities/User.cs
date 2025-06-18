@@ -16,5 +16,6 @@ namespace GyakorlatiFeladat.DataContext.Entities
         public string PasswordHash { get; set; }
 
         public List<FamilyUsers> FamilyUsers { get; set; } = new();
+        public List<TaskItem> TaskItems { get; set; } = new();
     }
 }
