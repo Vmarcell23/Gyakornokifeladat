@@ -40,6 +40,15 @@ namespace GyakorlatiFeladat.Services
                     src.FamilyUsers.FirstOrDefault(fu => fu.Role == Roles.Owner).UserId))
                 .ForMember(dest => dest.Members, opt => opt.MapFrom(src => src.FamilyUsers));
 
+            CreateMap<Family, FamilyDeatliedDto>()
+                   .ForMember(dest => dest.OwnerId, opt => opt.MapFrom(src =>
+                    src.FamilyUsers.FirstOrDefault(fu => fu.Role == Roles.Owner).UserId))
+                .ForMember(dest => dest.Members, opt => opt.MapFrom(src => src.FamilyUsers))
+                .ForMember(dest => dest.Tasks, opt => opt.MapFrom(src => src.TaskItems))
+                .ForMember(dest => dest.ShoppingItems, opt => opt.MapFrom(src => src.ShoppingItems));
+
+
+
             CreateMap<FamilyInvite, FamilyInviteDto>();
 
         }

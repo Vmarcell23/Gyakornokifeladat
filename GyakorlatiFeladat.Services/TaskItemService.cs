@@ -14,7 +14,6 @@ namespace GyakorlatiFeladat.Services
 {
     public interface ITaskItemService
     {
-        // Define methods for task management here, e.g.:
         Task<List<TaskItemDto>> GetAll();
         Task<List<TaskItemDto>> GetAllInFamily(ClaimsPrincipal user);
         Task<TaskItemDto> CreateTask(TaskItemCreateDto createDto,ClaimsPrincipal user);
@@ -159,7 +158,11 @@ namespace GyakorlatiFeladat.Services
         public async Task<TaskItemDto> DeleteTask(int id, ClaimsPrincipal user)
         {
             var familyId = _claimsHandler.GetFamilyId(user);
+            var userRole = _claimsHandler.GetUserRole(user);
             var taskItem = findbyid(id);
+
+            if (userRole != Roles.Owner && userRole != Roles.Admin)
+                throw new UnauthorizedAccessException("You do not have permission to delete shopping items.");
 
             if (taskItem.FamilyId != familyId)
                 throw new UnauthorizedAccessException("You do not have permission to delete this task.");

@@ -37,7 +37,7 @@ namespace GyakorlatiFeladat.Services
             var familyId = _claimsHandler.GetFamilyId(user);
             var Role = _claimsHandler.GetUserRole(user);
 
-            if ( Role != Roles.Owner)
+            if ( Role != Roles.Owner && Role == Roles.Admin)
                 throw new UnauthorizedAccessException("You do not have permission to invite users");
 
             if (invUserId == userId)

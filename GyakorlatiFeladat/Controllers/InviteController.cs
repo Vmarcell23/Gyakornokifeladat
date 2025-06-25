@@ -25,9 +25,9 @@ namespace GyakorlatiFeladat.Controllers
                 var result = await _inviteService.InviteToFamily(invUserId, User);
                 return Ok(result);
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(e.Message);
             }
         }
 
@@ -40,9 +40,9 @@ namespace GyakorlatiFeladat.Controllers
                 var result = await _inviteService.AcceptInvite(accept, familyId, User);
                 return Ok(result);
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(e.Message);
             }
 
         }

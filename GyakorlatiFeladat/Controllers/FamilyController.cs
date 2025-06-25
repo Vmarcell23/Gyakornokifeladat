@@ -21,8 +21,15 @@ namespace GyakorlatiFeladat.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> Create([FromBody] FamilyCreateDto createDto)
         {
-            var result = await _familyService.Create(createDto, User);
-            return Ok(result);
+            try
+            {
+                var result = await _familyService.Create(createDto, User);
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         [HttpGet("families")]
@@ -41,9 +48,64 @@ namespace GyakorlatiFeladat.Controllers
                 var result = await _familyService.MyFamily(User);
                 return Ok(result);
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(e.Message);
+            }
+        }
+
+        [HttpGet("family-details/{familyId}")]
+        public async Task<IActionResult> GetFamilyDetailsById(int familyId)
+        {
+            try
+            {
+                var result = await _familyService.GetFamilyDetailsById(familyId);
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+        [HttpPut("add-admin")]
+        public async Task<IActionResult> AddAdmin(int userId)
+        {
+            try
+            {
+                var result = await _familyService.AddAdmin(userId, User);
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+        [HttpPut("remove-admin")]
+        public async Task<IActionResult> RemoveAdmin(int userId)
+        {
+            try
+            {
+                var result = await _familyService.RemoveAdmin(userId, User);
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+        [HttpDelete("remove-member")]
+        public async Task<IActionResult> RemoveMember(int userId)
+        {
+            try
+            {
+                var result = await _familyService.RemoveMember(userId, User);
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
             }
         }
 

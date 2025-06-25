@@ -16,6 +16,16 @@ namespace GyakorlatiFeladat.DataContext.Dtos
 
     }
 
+    public class FamilyDeatliedDto
+    {
+        public int OwnerId { get; set; }
+        public string Name { get; set; }
+        public List<FamilyUserDto> Members { get; set; }
+        public List<ShoppingItemDto> ShoppingItems { get; set; }
+        public List<TaskItemDto> Tasks { get; set; }
+
+    }
+
     public class FamilyCreateDto
     {
         public string Name { get; set; }

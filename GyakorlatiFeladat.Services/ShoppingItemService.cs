@@ -84,7 +84,7 @@ namespace GyakorlatiFeladat.Services
         {
             var userId = _claimsHandler.GetUserId(user);
             var familyId = _claimsHandler.GetFamilyId(user);
-            
+
             var item = await _context.ShoppingItems
                 .FirstOrDefaultAsync(si => si.Id == itemId && si.FamilyId == familyId);
 
@@ -104,9 +104,8 @@ namespace GyakorlatiFeladat.Services
 
             item.Votes.Add(vote);
             if (item.Votes.Count == familyMemberCount)
-            {
                 item.IsNeeded = true;
-            }
+            
             _context.ShoppingItems.Update(item);
             await _context.SaveChangesAsync();
             return _mapper.Map<ShoppingItemDto>(item);
@@ -116,9 +115,11 @@ namespace GyakorlatiFeladat.Services
         {
             var familyId = _claimsHandler.GetFamilyId(user);
             var item = await _context.ShoppingItems
+                .Include(si => si.Votes)
                 .FirstOrDefaultAsync(si => si.Id == id && si.FamilyId == familyId);
 
             item = _mapper.Map(updateDto, item);
+            item.Votes.Clear();
 
             _context.ShoppingItems.Update(item);
             await _context.SaveChangesAsync();
@@ -129,8 +130,14 @@ namespace GyakorlatiFeladat.Services
         public async Task<ShoppingItemDto> Delete(int id,ClaimsPrincipal user)
         {
             var familyId = _claimsHandler.GetFamilyId(user);
+            var userRole = _claimsHandler.GetUserRole(user);
+            if (userRole != Roles.Owner && userRole != Roles.Admin)
+                throw new UnauthorizedAccessException("You do not have permission to delete shopping items.");
+
             var item = await _context.ShoppingItems
                 .FirstOrDefaultAsync(si => si.Id == id && si.FamilyId == familyId);
+            if (item.FamilyId != familyId)
+                throw new UnauthorizedAccessException("You do not have permission to delete this task.");
 
             _context.ShoppingItems.Remove(item);
             await _context.SaveChangesAsync();
