@@ -16,13 +16,13 @@ namespace GyakorlatiFeladat.Services
     {
         Task<List<TaskItemDto>> GetAll();
         Task<List<TaskItemDto>> GetAllInFamily(ClaimsPrincipal user);
-        Task<TaskItemDto> CreateTask(TaskItemCreateDto createDto,ClaimsPrincipal user);
-        Task<TaskItemDto> Check(int id,ClaimsPrincipal user);
         Task<TaskItemDto> GetById(int id);
         Task<List<TaskItemDto>> GetTasksByUserId(int userId);
         Task<List<TaskItemDto>> GetTaskByLogedUser(ClaimsPrincipal user);
-        Task<TaskItemDto> UpdateTask(int id, TaskItemCreateDto updateDto, ClaimsPrincipal user);
-        Task<TaskItemDto> DeleteTask(int id,ClaimsPrincipal user);
+        Task<TaskItemDto> Create(TaskItemCreateDto createDto,ClaimsPrincipal user);
+        Task<TaskItemDto> Check(int id,ClaimsPrincipal user);
+        Task<TaskItemDto> Update(int id, TaskItemCreateDto updateDto, ClaimsPrincipal user);
+        Task<TaskItemDto> Delete(int id,ClaimsPrincipal user);
     }
     public class TaskItemService : ITaskItemService
     {
@@ -36,13 +36,14 @@ namespace GyakorlatiFeladat.Services
             _claimsHandler = claimsHandler;
         }
 
-        public async Task<TaskItemDto> CreateTask(TaskItemCreateDto creatDto, ClaimsPrincipal user)
+        public async Task<TaskItemDto> Create(TaskItemCreateDto creatDto, ClaimsPrincipal user)
         {
             if (string.IsNullOrWhiteSpace(creatDto.TaskName) || string.IsNullOrWhiteSpace(creatDto.TaskDesc))
                 throw new ArgumentException("TaskName and TaskDesc are required");
             
             var familyId = _claimsHandler.GetFamilyId(user);
-            
+            var userId = _claimsHandler.GetUserId(user);
+
             var taskItem = _mapper.Map<TaskItem>(creatDto);
             if (taskItem == null)
                 throw new ArgumentNullException(nameof(creatDto));
@@ -57,7 +58,8 @@ namespace GyakorlatiFeladat.Services
             
             if(allUsersAssigned.Count() != allUsersOfFamily.Count())
                 throw new UnauthorizedAccessException("You can only assign tasks to users who are members of your family.");
-
+            
+            taskItem.CreatorId = userId;
             taskItem.Users.AddRange(allUsersAssigned);
             taskItem.FamilyId = familyId;
 
@@ -125,29 +127,33 @@ namespace GyakorlatiFeladat.Services
             return _mapper.Map<TaskItemDto>(taskItem);
         }  
 
-        public async Task<TaskItemDto> UpdateTask(int id, TaskItemCreateDto updateDto, ClaimsPrincipal user)
+        public async Task<TaskItemDto> Update(int id, TaskItemCreateDto updateDto, ClaimsPrincipal user)
         {
             if (string.IsNullOrWhiteSpace(updateDto.TaskName) || string.IsNullOrWhiteSpace(updateDto.TaskDesc))
                 throw new ArgumentException("TaskName and TaskDesc are required");
             
             var familyId = _claimsHandler.GetFamilyId(user);
-
             var taskItem = findbyid(id);
-            if (taskItem.FamilyId != familyId)
+            if (familyId != taskItem.FamilyId)
                 throw new UnauthorizedAccessException("You do not have permission to update this task.");
 
-            var userisfamlymember = await _context.FamilyUsers
+            var userId = _claimsHandler.GetUserId(user);
+            var userRole = _claimsHandler.GetUserRole(user);
+            if (userRole != Roles.Admin && userRole != Roles.Owner && userId != taskItem.CreatorId)
+                throw new UnauthorizedAccessException("You do not have permission to update this task.");
+
+            var assignedFamilyUsersCount = _context.FamilyUsers
                 .Where(fu => fu.FamilyId == familyId && updateDto.UserIds.Contains(fu.UserId))
-                .ToListAsync();
-            var users = await _context.Users
+                .Count();
+            var allUsersAssigned = await _context.Users
                 .Where(u => updateDto.UserIds.Contains(u.Id))
                 .ToListAsync();
-            if (users.Count() != userisfamlymember.Count())
+            if (allUsersAssigned.Count() != assignedFamilyUsersCount)
                 throw new UnauthorizedAccessException("You can only assign tasks to users who are members of your family.");
 
             taskItem = _mapper.Map(updateDto, taskItem);
             taskItem.Users.Clear();
-            taskItem.Users.AddRange(users);
+            taskItem.Users.AddRange(allUsersAssigned);
 
             _context.Update(taskItem);
             await _context.SaveChangesAsync();
@@ -155,16 +161,16 @@ namespace GyakorlatiFeladat.Services
             return _mapper.Map<TaskItemDto>(taskItem);
         }
 
-        public async Task<TaskItemDto> DeleteTask(int id, ClaimsPrincipal user)
+        public async Task<TaskItemDto> Delete(int id, ClaimsPrincipal user)
         {
             var familyId = _claimsHandler.GetFamilyId(user);
-            var userRole = _claimsHandler.GetUserRole(user);
             var taskItem = findbyid(id);
+            if (familyId != taskItem.FamilyId)
+                throw new UnauthorizedAccessException("You do not have permission to update this task.");
 
-            if (userRole != Roles.Owner && userRole != Roles.Admin)
-                throw new UnauthorizedAccessException("You do not have permission to delete shopping items.");
-
-            if (taskItem.FamilyId != familyId)
+            var userRole = _claimsHandler.GetUserRole(user);
+            var userId = _claimsHandler.GetUserId(user);
+            if (userRole != Roles.Admin && userRole != Roles.Owner && userId != taskItem.CreatorId)
                 throw new UnauthorizedAccessException("You do not have permission to delete this task.");
 
             _context.Tasks.Remove(taskItem);

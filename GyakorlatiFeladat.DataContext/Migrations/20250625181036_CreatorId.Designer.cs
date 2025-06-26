@@ -3,6 +3,7 @@ using System;
 using GyakorlatiFeladat.DataContext.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GyakorlatiFeladat.DataContext.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250625181036_CreatorId")]
+    partial class CreatorId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.6");
@@ -79,87 +82,6 @@ namespace GyakorlatiFeladat.DataContext.Migrations
                     b.ToTable("FamilyUsers");
                 });
 
-            modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.Menu", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("CreatorId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("FamilyId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("When")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FamilyId");
-
-                    b.ToTable("Menus");
-                });
-
-            modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.MenuRecipe", b =>
-                {
-                    b.Property<int>("MenuId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("RecipeId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("MenuId", "RecipeId");
-
-                    b.HasIndex("RecipeId");
-
-                    b.ToTable("MenuRecipes");
-                });
-
-            modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.Recipe", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("CreatorId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("FamilyId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Ingredients")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Instructions")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Link")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FamilyId");
-
-                    b.ToTable("Recipes");
-                });
-
             modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.ShoppingItem", b =>
                 {
                     b.Property<int>("Id")
@@ -208,7 +130,7 @@ namespace GyakorlatiFeladat.DataContext.Migrations
 
                     b.HasIndex("ShoppingItemId");
 
-                    b.ToTable("ShoppingItemVotes");
+                    b.ToTable("ShoppingItemVote");
                 });
 
             modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.TaskItem", b =>
@@ -304,47 +226,6 @@ namespace GyakorlatiFeladat.DataContext.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.Menu", b =>
-                {
-                    b.HasOne("GyakorlatiFeladat.DataContext.Entities.Family", "family")
-                        .WithMany()
-                        .HasForeignKey("FamilyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("family");
-                });
-
-            modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.MenuRecipe", b =>
-                {
-                    b.HasOne("GyakorlatiFeladat.DataContext.Entities.Menu", "Menu")
-                        .WithMany("MenuRecipes")
-                        .HasForeignKey("MenuId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GyakorlatiFeladat.DataContext.Entities.Recipe", "Recipe")
-                        .WithMany("MenuRecipes")
-                        .HasForeignKey("RecipeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Menu");
-
-                    b.Navigation("Recipe");
-                });
-
-            modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.Recipe", b =>
-                {
-                    b.HasOne("GyakorlatiFeladat.DataContext.Entities.Family", "family")
-                        .WithMany()
-                        .HasForeignKey("FamilyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("family");
-                });
-
             modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.ShoppingItem", b =>
                 {
                     b.HasOne("GyakorlatiFeladat.DataContext.Entities.Family", "Family")
@@ -398,16 +279,6 @@ namespace GyakorlatiFeladat.DataContext.Migrations
                     b.Navigation("ShoppingItems");
 
                     b.Navigation("TaskItems");
-                });
-
-            modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.Menu", b =>
-                {
-                    b.Navigation("MenuRecipes");
-                });
-
-            modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.Recipe", b =>
-                {
-                    b.Navigation("MenuRecipes");
                 });
 
             modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.ShoppingItem", b =>

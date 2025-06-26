@@ -12,6 +12,7 @@ namespace GyakorlatiFeladat.DataContext.Dtos
         public string Name { get; set; }
         public int? Quantity { get; set; }
         public bool IsNeeded { get; set; }
+        public DateTime CreatedAt { get; set; }
 
         public int Votes { get; set; }
     }

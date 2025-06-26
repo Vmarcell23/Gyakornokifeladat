@@ -11,7 +11,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace GyakorlatiFeladat.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/user")]
     [ApiController]
     public class UserController : ControllerBase
     {

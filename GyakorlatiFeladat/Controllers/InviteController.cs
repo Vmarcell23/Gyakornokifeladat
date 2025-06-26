@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GyakorlatiFeladat.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/invite")]
     [ApiController]
     public class InviteController : ControllerBase
     {

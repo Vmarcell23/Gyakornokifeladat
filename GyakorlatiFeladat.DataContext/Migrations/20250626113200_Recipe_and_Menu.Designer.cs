@@ -3,6 +3,7 @@ using System;
 using GyakorlatiFeladat.DataContext.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GyakorlatiFeladat.DataContext.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250626113200_Recipe_and_Menu")]
+    partial class Recipe_and_Menu
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.6");
@@ -85,13 +88,14 @@ namespace GyakorlatiFeladat.DataContext.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("CreatorId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int>("FamilyId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
+                        .HasColumnType("TEXT");
+
+                    b.PrimitiveCollection<string>("RecipeIds")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Type")
@@ -105,21 +109,6 @@ namespace GyakorlatiFeladat.DataContext.Migrations
                     b.HasIndex("FamilyId");
 
                     b.ToTable("Menus");
-                });
-
-            modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.MenuRecipe", b =>
-                {
-                    b.Property<int>("MenuId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("RecipeId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("MenuId", "RecipeId");
-
-                    b.HasIndex("RecipeId");
-
-                    b.ToTable("MenuRecipes");
                 });
 
             modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.Recipe", b =>
@@ -315,25 +304,6 @@ namespace GyakorlatiFeladat.DataContext.Migrations
                     b.Navigation("family");
                 });
 
-            modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.MenuRecipe", b =>
-                {
-                    b.HasOne("GyakorlatiFeladat.DataContext.Entities.Menu", "Menu")
-                        .WithMany("MenuRecipes")
-                        .HasForeignKey("MenuId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GyakorlatiFeladat.DataContext.Entities.Recipe", "Recipe")
-                        .WithMany("MenuRecipes")
-                        .HasForeignKey("RecipeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Menu");
-
-                    b.Navigation("Recipe");
-                });
-
             modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.Recipe", b =>
                 {
                     b.HasOne("GyakorlatiFeladat.DataContext.Entities.Family", "family")
@@ -398,16 +368,6 @@ namespace GyakorlatiFeladat.DataContext.Migrations
                     b.Navigation("ShoppingItems");
 
                     b.Navigation("TaskItems");
-                });
-
-            modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.Menu", b =>
-                {
-                    b.Navigation("MenuRecipes");
-                });
-
-            modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.Recipe", b =>
-                {
-                    b.Navigation("MenuRecipes");
                 });
 
             modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.ShoppingItem", b =>

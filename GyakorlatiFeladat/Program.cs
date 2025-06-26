@@ -30,7 +30,9 @@ builder.Services.AddScoped<ITaskItemService, TaskItemService>();
 builder.Services.AddScoped<IShoppingItemService, ShoppingItemService>();
 builder.Services.AddScoped<IFamilyService, FamilyService>();
 builder.Services.AddScoped<IInviteService, InviteService>();
-builder.Services.AddScoped<IClaimsHandler, ClaimsHandler>();    
+builder.Services.AddScoped<IClaimsHandler, ClaimsHandler>();
+builder.Services.AddScoped<IRecipeService,RecipeService>();
+builder.Services.AddScoped<IMenuService, MenuService>();
 //AutoMapper Config
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
 

@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GyakorlatiFeladat.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/task")]
     [ApiController]
     public class TaskController : ControllerBase
     {
@@ -23,7 +23,7 @@ namespace GyakorlatiFeladat.Controllers
         {
             try
             {
-                var result = await _taskItemService.CreateTask(taskItemCreateDto,User);
+                var result = await _taskItemService.Create(taskItemCreateDto,User);
                 return Ok(result);
             }
             catch (Exception e)
@@ -124,7 +124,7 @@ namespace GyakorlatiFeladat.Controllers
         {
             try
             {
-                var result = await _taskItemService.UpdateTask(id, taskItemCreateDto,User);
+                var result = await _taskItemService.Update(id, taskItemCreateDto,User);
                 return Ok(result);
             }
             catch (Exception e)
@@ -138,7 +138,7 @@ namespace GyakorlatiFeladat.Controllers
         {
             try
             {
-                var result = await _taskItemService.DeleteTask(id,User);
+                var result = await _taskItemService.Delete(id,User);
                 return Ok(result);
             }
             catch (Exception e)

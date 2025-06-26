@@ -10,6 +10,7 @@ namespace GyakorlatiFeladat.DataContext.Dtos
     {   
         public string TaskName { get; set; }
         public string TaskDesc { get; set; }  //Description
+        public DateTime CreatedAt { get; set; }
         public DateTime DueDate { get; set; }
         public bool IsDone { get; set; }
 

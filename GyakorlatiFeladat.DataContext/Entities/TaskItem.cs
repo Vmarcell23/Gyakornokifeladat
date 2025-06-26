@@ -3,8 +3,10 @@
     public class TaskItem
     {
         public int Id { get; set; }
+        public int CreatorId { get; set; } 
         public string TaskName { get; set; }   
         public string TaskDesc { get; set; }  //Description
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime DueDate { get; set; }
         public bool IsDone { get; set; }
 

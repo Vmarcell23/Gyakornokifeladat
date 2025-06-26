@@ -45,8 +45,11 @@ namespace GyakorlatiFeladat.Services
                 throw new ArgumentException("ItemName is required");
 
             var familyId = _claimsHandler.GetFamilyId(user);
+            var userId = _claimsHandler.GetUserId(user);
 
             var shoppingItem = _mapper.Map<ShoppingItem>(shoppingItemCreateDto);
+            
+            shoppingItem.CreatorId = userId;
             shoppingItem.FamilyId = familyId; 
             await _context.ShoppingItems.AddAsync(shoppingItem);
             await _context.SaveChangesAsync();
@@ -113,10 +116,19 @@ namespace GyakorlatiFeladat.Services
 
         public async Task<ShoppingItemDto> Update(int id, ShoppingItemCreateDto updateDto, ClaimsPrincipal user )
         {
+            if (string.IsNullOrWhiteSpace(updateDto.Name))
+                throw new ArgumentException("ShoppingItem name is required");
+
             var familyId = _claimsHandler.GetFamilyId(user);
+            var userRole = _claimsHandler.GetUserRole(user);
+            var userId = _claimsHandler.GetUserId(user);
+
             var item = await _context.ShoppingItems
                 .Include(si => si.Votes)
                 .FirstOrDefaultAsync(si => si.Id == id && si.FamilyId == familyId);
+
+            if (userRole != Roles.Admin && userRole != Roles.Owner && userId != item.CreatorId)
+                throw new UnauthorizedAccessException("You do not have permission to update this shopping item.");
 
             item = _mapper.Map(updateDto, item);
             item.Votes.Clear();
@@ -130,14 +142,16 @@ namespace GyakorlatiFeladat.Services
         public async Task<ShoppingItemDto> Delete(int id,ClaimsPrincipal user)
         {
             var familyId = _claimsHandler.GetFamilyId(user);
+            var userId = _claimsHandler.GetUserId(user);
             var userRole = _claimsHandler.GetUserRole(user);
-            if (userRole != Roles.Owner && userRole != Roles.Admin)
-                throw new UnauthorizedAccessException("You do not have permission to delete shopping items.");
+        
 
             var item = await _context.ShoppingItems
                 .FirstOrDefaultAsync(si => si.Id == id && si.FamilyId == familyId);
             if (item.FamilyId != familyId)
                 throw new UnauthorizedAccessException("You do not have permission to delete this task.");
+            if (userRole != Roles.Admin && userRole != Roles.Owner && userId != item.CreatorId)
+                throw new UnauthorizedAccessException("You do not have permission to update this shopping item.");
 
             _context.ShoppingItems.Remove(item);
             await _context.SaveChangesAsync();

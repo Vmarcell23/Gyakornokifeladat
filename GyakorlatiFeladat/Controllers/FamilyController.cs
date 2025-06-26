@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GyakorlatiFeladat.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/family")]
     [ApiController]
     public class FamilyController : ControllerBase
     {
