@@ -33,6 +33,22 @@ namespace GyakorlatiFeladat.Controllers
 
         }
 
+        [Authorize]
+        [HttpPut("vote/{id}")]
+        public async Task<IActionResult> VoteItem(int itemId)
+        {
+            try
+            {
+                var result = await _shoppingItemService.Vote(itemId, User);
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+
         [HttpGet("items")]
         public async Task<IActionResult> GetAllItems()
         {
@@ -74,22 +90,6 @@ namespace GyakorlatiFeladat.Controllers
                 return BadRequest(e.Message);
             }
         }
-
-        [Authorize]
-        [HttpPut("vote")]
-        public async Task<IActionResult> VoteItem(int itemId)
-        {
-            try
-            {
-                var result = await _shoppingItemService.Vote(itemId,User);
-                return Ok(result);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
-        }
-
         [HttpPut("update/{id}")]
         public async Task<IActionResult> UpdateItem(int id, [FromBody] ShoppingItemCreateDto updateDto)
         {

@@ -17,6 +17,21 @@ namespace GyakorlatiFeladat.Controllers
             _recipeService = recipeService;
         }
 
+        [Authorize]
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateRecipe([FromBody] RecipeCreateDto recipeCreateDto)
+        {
+            try
+            {
+                var result = await _recipeService.Create(recipeCreateDto, User);
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
         [HttpGet("recipes")]
         public async Task<IActionResult> GetAllRecipes()
         {
@@ -48,22 +63,7 @@ namespace GyakorlatiFeladat.Controllers
         }
 
         [Authorize]
-        [HttpPost("create")]
-        public async Task<IActionResult> CreateRecipe([FromBody] RecipeCreateDto recipeCreateDto)
-        {
-            try
-            {
-                var result = await _recipeService.Create(recipeCreateDto, User);
-                return Ok(result);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
-        }
-
-        [Authorize]
-        [HttpPut("update")]
+        [HttpPut("update/{id}")]
         public async Task<IActionResult> UpdateRecipe(int id, [FromBody] RecipeCreateDto recipeCreateDto)
         {
             try
@@ -78,7 +78,7 @@ namespace GyakorlatiFeladat.Controllers
         }
 
         [Authorize]
-        [HttpDelete("delete")]
+        [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteRecipe(int id)
         {
             try

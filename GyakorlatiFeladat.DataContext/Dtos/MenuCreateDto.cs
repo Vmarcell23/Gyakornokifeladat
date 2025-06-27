@@ -14,6 +14,8 @@ namespace GyakorlatiFeladat.DataContext.Dtos
         public List<RecipeInMenuDto> Recipes { get; set; }
         public DateTime When { get; set; }
         public MenuType Type { get; set; }
+        public bool IsNeeded { get; set; }
+        public int Votes { get; set; }
     }
     public class MenuCreateDto
     {

@@ -23,6 +23,8 @@ namespace GyakorlatiFeladat.DataContext.Dtos
         public List<FamilyUserDto> Members { get; set; }
         public List<ShoppingItemDto> ShoppingItems { get; set; }
         public List<TaskItemDto> Tasks { get; set; }
+        public List<RecipeDto> Recipes { get; set; }
+        public List<MenuDto> Menus { get; set; }
 
     }
 

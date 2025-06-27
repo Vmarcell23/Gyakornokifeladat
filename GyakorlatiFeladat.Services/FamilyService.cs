@@ -23,6 +23,8 @@ namespace GyakorlatiFeladat.Services
         Task<FamilyUserDto> AddAdmin(int userId, ClaimsPrincipal user);
         Task<FamilyUserDto> RemoveAdmin(int userId, ClaimsPrincipal user);
         Task<FamilyUserDto> RemoveMember(int userId, ClaimsPrincipal user);
+        Task<FamilyDto> UpdateName(string name, ClaimsPrincipal user);
+        Task<FamilyDto> Delete(int familyId, ClaimsPrincipal user);
 
     }
     public class FamilyService : IFamilyService
@@ -30,7 +32,7 @@ namespace GyakorlatiFeladat.Services
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
         private readonly IClaimsHandler _claimsHandler;
-        public FamilyService (AppDbContext context, IMapper mapper, IClaimsHandler claimsHandler)
+        public FamilyService(AppDbContext context, IMapper mapper, IClaimsHandler claimsHandler)
         {
             _context = context;
             _mapper = mapper;
@@ -59,7 +61,7 @@ namespace GyakorlatiFeladat.Services
             await _context.Families.AddAsync(family);
             await _context.SaveChangesAsync();
 
-            return _mapper.Map<FamilyDto>(family);  
+            return _mapper.Map<FamilyDto>(family);
         }
 
         public async Task<List<FamilyDto>> GetAll()
@@ -79,6 +81,8 @@ namespace GyakorlatiFeladat.Services
                 .ThenInclude(fu => fu.User)
                 .Include(f => f.TaskItems)
                 .Include(f => f.ShoppingItems)
+                .Include(f => f.Recipes)
+                .Include(f => f.Menus)
                 .FirstOrDefaultAsync(f => f.Id == familyId);
             if (family == null)
                 throw new KeyNotFoundException("Family not found.");
@@ -123,7 +127,7 @@ namespace GyakorlatiFeladat.Services
         {
             var familyId = _claimsHandler.GetFamilyId(user);
             var userRole = _claimsHandler.GetUserRole(user);
-            if(userRole != Roles.Owner)
+            if (userRole != Roles.Owner)
                 throw new UnauthorizedAccessException("Only family owner can remove admin rights.");
 
             var familyUser = await _context.FamilyUsers
@@ -133,7 +137,7 @@ namespace GyakorlatiFeladat.Services
                 throw new KeyNotFoundException("User not found in the family.");
             if (familyUser.Role != Roles.Admin)
                 throw new InvalidOperationException("The user is not Admin");
-            
+
             familyUser.Role = Roles.FamilyMember;
             _context.Update(familyUser);
             await _context.SaveChangesAsync();
@@ -147,7 +151,7 @@ namespace GyakorlatiFeladat.Services
             var familyUser = await _context.FamilyUsers
                 .Include(fu => fu.User)
                 .FirstOrDefaultAsync(fu => fu.UserId == userId && fu.FamilyId == familyId);
-            
+
             if (userRole != Roles.Admin && userRole != Roles.Owner)
                 throw new UnauthorizedAccessException("Only family owner or admins can remove users from the family.");
             if (familyUser == null)
@@ -160,6 +164,43 @@ namespace GyakorlatiFeladat.Services
             _context.FamilyUsers.Remove(familyUser);
             await _context.SaveChangesAsync();
             return _mapper.Map<FamilyUserDto>(familyUser);
+        }
+
+        public async Task<FamilyDto> UpdateName(string name, ClaimsPrincipal user)
+        {
+            var familyId = _claimsHandler.GetFamilyId(user);
+            var userRole = _claimsHandler.GetUserRole(user);
+
+            if (string.IsNullOrWhiteSpace(name) && name == "string")
+                throw new ArgumentException("Family name is required");
+            var family = _context.Families
+                .FirstOrDefault(f => f.Id == familyId );
+            if (family == null)
+                throw new KeyNotFoundException("Family not found or you are not a member of this family.");
+
+            if (userRole != Roles.Owner)
+                throw new UnauthorizedAccessException("Only family owner or admins can update the family name.");
+            family.Name = name;
+            _context.Families.Update(family);
+            await _context.SaveChangesAsync();
+            return _mapper.Map<FamilyDto>(family);
+        }
+
+        public async Task<FamilyDto> Delete(int familyId, ClaimsPrincipal user)
+        {
+            var userRole = _claimsHandler.GetUserRole(user);
+            var family = await _context.Families
+                .Include(f => f.FamilyUsers)
+                .FirstOrDefaultAsync(f => f.Id == familyId);
+
+            if (family == null)
+                throw new KeyNotFoundException("Family not found.");
+            if (userRole != Roles.Owner)
+                throw new UnauthorizedAccessException("Only family owner can delete the family.");
+            
+            _context.Families.Remove(family);
+            await _context.SaveChangesAsync();
+            return _mapper.Map<FamilyDto>(family);
         }
     }
 }

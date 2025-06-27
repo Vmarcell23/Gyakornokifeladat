@@ -94,6 +94,19 @@ namespace GyakorlatiFeladat.Controllers
                 return BadRequest(e.Message);
             }
         }
+        [HttpPut("changename/{name}")]
+        public async Task<IActionResult> UpdateName(string name)
+        {
+            try
+            {
+                var result = await _familyService.UpdateName(name, User);
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
 
         [HttpDelete("remove-member")]
         public async Task<IActionResult> RemoveMember(int userId)
@@ -108,6 +121,18 @@ namespace GyakorlatiFeladat.Controllers
                 return BadRequest(e.Message);
             }
         }
-
+        [HttpDelete("delete")]
+        public async Task<IActionResult> Delete(int familyId)
+        {
+            try
+            {
+                var result = await _familyService.Delete(familyId, User);
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
     }
 }

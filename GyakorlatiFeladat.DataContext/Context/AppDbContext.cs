@@ -20,6 +20,7 @@ namespace GyakorlatiFeladat.DataContext.Context
         public DbSet<Menu> Menus { get; set; }
         public DbSet<Recipe> Recipes { get; set; }  
         public DbSet<MenuRecipe> MenuRecipes { get; set; }
+        public DbSet<MenuVote> MenuVotes { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {

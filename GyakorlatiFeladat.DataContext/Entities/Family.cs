@@ -14,5 +14,7 @@ namespace GyakorlatiFeladat.DataContext.Entities
         public List<ShoppingItem> ShoppingItems { get; set; } = new();
         public List<TaskItem> TaskItems { get; set; } = new();
         public List<FamilyUsers> FamilyUsers { get; set; } = new();
+        public List<Recipe> Recipes { get; set; } = new();
+        public List<Menu> Menus { get; set; } = new();
     }
 }

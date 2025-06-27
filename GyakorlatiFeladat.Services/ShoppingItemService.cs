@@ -90,6 +90,8 @@ namespace GyakorlatiFeladat.Services
 
             var item = await _context.ShoppingItems
                 .FirstOrDefaultAsync(si => si.Id == itemId && si.FamilyId == familyId);
+            if (item == null)
+                throw new KeyNotFoundException("Shopping item not found in this family.");
 
             var vote = new ShoppingItemVote
             {
@@ -97,10 +99,9 @@ namespace GyakorlatiFeladat.Services
                 UserId = userId,
             };
 
-            var userNotVoted = item.Votes.FirstOrDefault(v => v.UserId == vote.UserId);
-            if (userNotVoted != null)
-                throw new InvalidOperationException("This user has already voted for this item.");
-
+            if(item.Votes.Any(v => v.UserId == userId))
+                throw new InvalidOperationException("You have already voted for this item.");
+            
             var familyMemberCount = await _context.FamilyUsers //Ha mindenki zavasz akkor az IsNeeded true lesz
                 .Where(fu => fu.FamilyId == familyId)
                 .CountAsync();
