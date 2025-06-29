@@ -3,6 +3,7 @@ using System;
 using GyakorlatiFeladat.DataContext.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GyakorlatiFeladat.DataContext.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250628124817_final")]
+    partial class final
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.6");
@@ -51,8 +54,6 @@ namespace GyakorlatiFeladat.DataContext.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("FamilyInvites");
                 });
@@ -164,7 +165,7 @@ namespace GyakorlatiFeladat.DataContext.Migrations
                     b.Property<int>("FamilyId")
                         .HasColumnType("INTEGER");
 
-                    b.PrimitiveCollection<string>("Ingredients")
+                    b.Property<string>("Ingredients")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Instructions")
@@ -306,17 +307,6 @@ namespace GyakorlatiFeladat.DataContext.Migrations
                     b.HasIndex("UsersId");
 
                     b.ToTable("TaskItemUser");
-                });
-
-            modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.FamilyInvite", b =>
-                {
-                    b.HasOne("GyakorlatiFeladat.DataContext.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("GyakorlatiFeladat.DataContext.Entities.FamilyUsers", b =>

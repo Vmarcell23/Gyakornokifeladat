@@ -19,7 +19,7 @@ namespace GyakorlatiFeladat.Services
         Task<List<ShoppingItemDto>> GetAll();
         Task<List<ShoppingItemDto>> GetAllInFamily(ClaimsPrincipal user);
         Task<ShoppingItemDto> GetById(int id);
-        Task<ShoppingItemDto> Create(ShoppingItemCreateDto shoppingItemCreateDto,ClaimsPrincipal user);
+        Task<ShoppingItemDto> Create(ShoppingItemCreateDto createDto,ClaimsPrincipal user);
         Task<ShoppingItemDto> Vote(int itemId, ClaimsPrincipal user);
         Task<ShoppingItemDto> Update(int id, ShoppingItemCreateDto updateDto, ClaimsPrincipal user);
         Task<ShoppingItemDto> Delete(int id, ClaimsPrincipal user);
@@ -37,17 +37,18 @@ namespace GyakorlatiFeladat.Services
             _mapper = mapper;
             _claimsHandler = claimsHandler;
         }
-        public async Task<ShoppingItemDto> Create(ShoppingItemCreateDto shoppingItemCreateDto, ClaimsPrincipal user)
+
+        public async Task<ShoppingItemDto> Create(ShoppingItemCreateDto createDto, ClaimsPrincipal user)
         {
-            if (shoppingItemCreateDto == null)
-                throw new ArgumentNullException(nameof(shoppingItemCreateDto));
-            if (string.IsNullOrWhiteSpace(shoppingItemCreateDto.Name))
+            if (createDto == null)
+                throw new ArgumentNullException(nameof(createDto));
+            if (string.IsNullOrWhiteSpace(createDto.Name))
                 throw new ArgumentException("ItemName is required");
 
             var familyId = _claimsHandler.GetFamilyId(user);
             var userId = _claimsHandler.GetUserId(user);
 
-            var shoppingItem = _mapper.Map<ShoppingItem>(shoppingItemCreateDto);
+            var shoppingItem = _mapper.Map<ShoppingItem>(createDto);
             
             shoppingItem.CreatorId = userId;
             shoppingItem.FamilyId = familyId; 
@@ -55,6 +56,7 @@ namespace GyakorlatiFeladat.Services
             await _context.SaveChangesAsync();
             return _mapper.Map<ShoppingItemDto>(shoppingItem);
         }
+
         public async Task<List<ShoppingItemDto>> GetAll()
         {
             var shoppingItems = await _context.ShoppingItems
@@ -89,6 +91,7 @@ namespace GyakorlatiFeladat.Services
             var familyId = _claimsHandler.GetFamilyId(user);
 
             var item = await _context.ShoppingItems
+                .Include(si => si.Votes)
                 .FirstOrDefaultAsync(si => si.Id == itemId && si.FamilyId == familyId);
             if (item == null)
                 throw new KeyNotFoundException("Shopping item not found in this family.");
@@ -117,7 +120,7 @@ namespace GyakorlatiFeladat.Services
 
         public async Task<ShoppingItemDto> Update(int id, ShoppingItemCreateDto updateDto, ClaimsPrincipal user )
         {
-            if (string.IsNullOrWhiteSpace(updateDto.Name))
+            if (string.IsNullOrWhiteSpace(updateDto.Name) || updateDto.Name == "string")
                 throw new ArgumentException("ShoppingItem name is required");
 
             var familyId = _claimsHandler.GetFamilyId(user);
@@ -127,6 +130,8 @@ namespace GyakorlatiFeladat.Services
             var item = await _context.ShoppingItems
                 .Include(si => si.Votes)
                 .FirstOrDefaultAsync(si => si.Id == id && si.FamilyId == familyId);
+            if (item == null)
+                throw new KeyNotFoundException("Shopping item not found in this family.");
 
             if (userRole != Roles.Admin && userRole != Roles.Owner && userId != item.CreatorId)
                 throw new UnauthorizedAccessException("You do not have permission to update this shopping item.");
@@ -143,16 +148,15 @@ namespace GyakorlatiFeladat.Services
         public async Task<ShoppingItemDto> Delete(int id,ClaimsPrincipal user)
         {
             var familyId = _claimsHandler.GetFamilyId(user);
-            var userId = _claimsHandler.GetUserId(user);
-            var userRole = _claimsHandler.GetUserRole(user);
-        
-
             var item = await _context.ShoppingItems
                 .FirstOrDefaultAsync(si => si.Id == id && si.FamilyId == familyId);
-            if (item.FamilyId != familyId)
-                throw new UnauthorizedAccessException("You do not have permission to delete this task.");
+            if (item == null)
+                throw new KeyNotFoundException("Shopping item not found in this family.");
+
+            var userId = _claimsHandler.GetUserId(user);
+            var userRole = _claimsHandler.GetUserRole(user);
             if (userRole != Roles.Admin && userRole != Roles.Owner && userId != item.CreatorId)
-                throw new UnauthorizedAccessException("You do not have permission to update this shopping item.");
+                throw new UnauthorizedAccessException("You do not have permission to delete this shopping item.");
 
             _context.ShoppingItems.Remove(item);
             await _context.SaveChangesAsync();

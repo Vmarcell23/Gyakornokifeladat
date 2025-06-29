@@ -39,27 +39,6 @@ namespace GyakorlatiFeladat.Services
             _claimsHandler = claimsHandler;
         }
 
-        public async Task<List<MenuDto>> GetAll()
-        {
-            var menus = await _context.Menus
-                .Include(m => m.MenuRecipes)
-                .ThenInclude(mr => mr.Recipe)
-                .ToListAsync();
-            return _mapper.Map<List<MenuDto>>(menus);
-        }
-
-        public async Task<List<MenuDto>> GetFamilyMenus(ClaimsPrincipal user)
-        {
-            var familyId = _claimsHandler.GetFamilyId(user);
-            var menus = await _context.Menus
-                .Include(m => m.MenuRecipes)
-                .ThenInclude(mr => mr.Recipe)
-                .Where(m => m.FamilyId == familyId)
-                .ToListAsync();
-
-            return _mapper.Map<List<MenuDto>>(menus);
-        }
-
         public async Task<MenuDto> Create(MenuCreateDto createDto, ClaimsPrincipal user)
         {
             if (createDto == null)
@@ -100,80 +79,43 @@ namespace GyakorlatiFeladat.Services
             return _mapper.Map<MenuDto>(menu);
         }
 
-        public async Task<MenuDto> Update(int id, MenuCreateDto updateDto, ClaimsPrincipal user)
+        public async Task<List<MenuDto>> GetAll()
         {
-            if (updateDto == null)
-                throw new ArgumentNullException(nameof(updateDto));
-
-            var menu = await _context.Menus
+            var menus = await _context.Menus
+                .Include(m => m.Votes)
                 .Include(m => m.MenuRecipes)
                 .ThenInclude(mr => mr.Recipe)
-                .FirstOrDefaultAsync(m => m.Id == id);
-
-            var familyId = _claimsHandler.GetFamilyId(user);
-            var userId = _claimsHandler.GetUserId(user);
-            var userRole = _claimsHandler.GetUserRole(user);
-
-            if (userRole != Roles.Owner && userRole != Roles.Admin && userId != menu.CreatorId)
-                throw new UnauthorizedAccessException("You dont have permission to update the menu!");
-
-            var recipesInFamily = await _context.Recipes
-                .Where(r => r.FamilyId == familyId && updateDto.RecipeIds.Contains(r.Id))
                 .ToListAsync();
-
-            if (recipesInFamily.Count() != updateDto.RecipeIds.Count())
-                throw new InvalidOperationException(
-                    "You can only create menus with recipes that belong to your family.");
-
-            if (string.IsNullOrWhiteSpace(updateDto.Name) ||
-                updateDto.Name == "string" && updateDto.RecipeIds.Count() > 0)
-            {
-                updateDto.Name = string.Join(", ", recipesInFamily.Select(r => r.Name));
-            }
-            else
-            {
-                throw new ArgumentException("Name is required");
-            }
-
-            menu = _mapper.Map(updateDto, menu);
-
-            _context.Menus.Update(menu);
-            await _context.SaveChangesAsync();
-            return _mapper.Map<MenuDto>(menu);
+            return _mapper.Map<List<MenuDto>>(menus);
         }
 
-        public async Task<MenuDto> Delete(int id, ClaimsPrincipal user)
+        public async Task<List<MenuDto>> GetFamilyMenus(ClaimsPrincipal user)
         {
             var familyId = _claimsHandler.GetFamilyId(user);
-            var userRole = _claimsHandler.GetUserRole(user);
-            var userId = _claimsHandler.GetUserId(user);
-
-            var menu = await _context.Menus
+            var menus = await _context.Menus
+                .Include(m => m.Votes)
                 .Include(m => m.MenuRecipes)
                 .ThenInclude(mr => mr.Recipe)
-                .FirstOrDefaultAsync(m => m.Id == id && m.FamilyId == familyId);
+                .Where(m => m.FamilyId == familyId)
+                .ToListAsync();
 
-            if (menu == null)
-                throw new KeyNotFoundException("Menu is not found in the family.");
-            if (userRole != Roles.Owner && userRole != Roles.Admin && userId != menu.CreatorId)
-                throw new UnauthorizedAccessException("You do not have permission to delete this menu.");
-
-            _context.Menus.Remove(menu);
-            await _context.SaveChangesAsync();
-            return _mapper.Map<MenuDto>(menu);
+            return _mapper.Map<List<MenuDto>>(menus);
         }
 
         public async Task<MenuDto> Vote(int id, ClaimsPrincipal user)
         {
             var familyId = _claimsHandler.GetFamilyId(user);
-            var userId = _claimsHandler.GetUserId(user);
+       
 
             var menu = await _context.Menus
+                .Include(m => m.MenuRecipes)
+                .ThenInclude(mr => mr.Recipe)
                 .Include(m => m.Votes)
                 .FirstOrDefaultAsync(m => m.Id == id && m.FamilyId == familyId);
             if (menu == null)
                 throw new KeyNotFoundException("Menu is not found in the family.");
 
+            var userId = _claimsHandler.GetUserId(user);
             if (menu.Votes.Any(v => v.UserId == userId))
                 throw new InvalidOperationException("You have already voted for this menu.");
 
@@ -193,6 +135,66 @@ namespace GyakorlatiFeladat.Services
             await _context.SaveChangesAsync();
             return _mapper.Map<MenuDto>(menu);
         }
+
+        public async Task<MenuDto> Update(int id, MenuCreateDto updateDto, ClaimsPrincipal user)
+        {
+            if (updateDto == null)
+                throw new ArgumentNullException(nameof(updateDto));
+
+            var menu = await _context.Menus
+                .Include(m => m.MenuRecipes)
+                .ThenInclude(mr => mr.Recipe)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            var familyId = _claimsHandler.GetFamilyId(user);
+            var userId = _claimsHandler.GetUserId(user);
+            var userRole = _claimsHandler.GetUserRole(user);
+
+            if (userRole != Roles.Owner && userRole != Roles.Admin && userId != menu.CreatorId)
+                throw new UnauthorizedAccessException("You dont have permission to update the menu!");
+            var recipesInFamily = await _context.Recipes
+                .Where(r => r.FamilyId == familyId && updateDto.RecipeIds.Contains(r.Id))
+                .ToListAsync();
+            
+            if (recipesInFamily.Count() != updateDto.RecipeIds.Count())
+                throw new InvalidOperationException(
+                    "You can only create menus with recipes that belong to your family.");
+
+            if (string.IsNullOrWhiteSpace(updateDto.Name) || updateDto.Name == "string")
+            {
+                if (updateDto.RecipeIds.Count() > 0)
+                    updateDto.Name = string.Join(", ", recipesInFamily.Select(r => r.Name));
+                else
+                    throw new ArgumentException("Name is required");
+            }
+
+            menu = _mapper.Map(updateDto, menu);
+
+            _context.Menus.Update(menu);
+            await _context.SaveChangesAsync();
+            return _mapper.Map<MenuDto>(menu);
+        }
+
+        public async Task<MenuDto> Delete(int id, ClaimsPrincipal user)
+        {
+            var familyId = _claimsHandler.GetFamilyId(user);
+            var menu = await _context.Menus
+                .Include(m => m.MenuRecipes)
+                .ThenInclude(mr => mr.Recipe)
+                .FirstOrDefaultAsync(m => m.Id == id && m.FamilyId == familyId);
+            if (menu == null)
+                throw new KeyNotFoundException("Menu is not found in the family.");
+            var userRole = _claimsHandler.GetUserRole(user);
+            var userId = _claimsHandler.GetUserId(user);
+            if (userRole != Roles.Owner && userRole != Roles.Admin && userId != menu.CreatorId)
+                throw new UnauthorizedAccessException("You do not have permission to delete this menu.");
+
+            _context.Menus.Remove(menu);
+            await _context.SaveChangesAsync();
+            return _mapper.Map<MenuDto>(menu);
+        }
+
+
     }
 
 }

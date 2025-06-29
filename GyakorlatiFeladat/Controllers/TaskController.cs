@@ -45,8 +45,9 @@ namespace GyakorlatiFeladat.Controllers
                 return BadRequest(e.Message);
             }
         }
+
         [Authorize]
-        [HttpGet("familytasks")]
+        [HttpGet("family-tasks")]
         public async Task<IActionResult> GetAllFamilyTasks()
         {
             try
@@ -75,7 +76,7 @@ namespace GyakorlatiFeladat.Controllers
         }
 
         [Authorize]
-        [HttpGet("mytasks/")]
+        [HttpGet("my-tasks")]
         public async Task<IActionResult> GetTasksByLogedUserId()
         {
             try
@@ -120,11 +121,11 @@ namespace GyakorlatiFeladat.Controllers
 
         [Authorize]
         [HttpPut("update/{id}")]
-        public async Task<IActionResult> UpdateTask(int id, [FromBody] TaskItemCreateDto taskItemCreateDto)
+        public async Task<IActionResult> UpdateTask(int id, [FromBody] TaskItemCreateDto createDto)
         {
             try
             {
-                var result = await _taskItemService.Update(id, taskItemCreateDto,User);
+                var result = await _taskItemService.Update(id, createDto,User);
                 return Ok(result);
             }
             catch (Exception e)
@@ -132,6 +133,7 @@ namespace GyakorlatiFeladat.Controllers
                 return BadRequest(e.Message);
             }
         }
+
         [Authorize]
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteTask(int id)

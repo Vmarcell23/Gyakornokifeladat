@@ -33,25 +33,28 @@ namespace GyakorlatiFeladat.Services
 
         public async Task<FamilyInviteDto> InviteToFamily(int invUserId, ClaimsPrincipal user)
         {
-            var userId = _claimsHandler.GetUserId(user);
-            var familyId = _claimsHandler.GetFamilyId(user);
             var Role = _claimsHandler.GetUserRole(user);
-
-            if ( Role != Roles.Owner && Role == Roles.Admin)
+            if (Role != Roles.Owner && Role != Roles.Admin)
                 throw new UnauthorizedAccessException("You do not have permission to invite users");
 
+            var userId = _claimsHandler.GetUserId(user);
             if (invUserId == userId)
                 throw new InvalidOperationException("You cannot invite yourself to the family.");
-            if (invUserId <= 0)
-                throw new ArgumentException("Invalid user ID.");
+            var userExists = await _context.Users.AnyAsync(u => u.Id == invUserId);
+            if (!userExists)
+                throw new InvalidOperationException("User does not exist.");
+            
+            var familyId = _claimsHandler.GetFamilyId(user);
+
             var existingInvite = await _context.FamilyInvites
                 .FirstOrDefaultAsync(i => i.FamilyId == familyId && i.UserId == invUserId);
             if (existingInvite != null)
                 throw new InvalidOperationException("This user has already been invited to the family.");
             var exisitingFamilyMember = await _context.FamilyUsers
-                .FirstOrDefaultAsync(fu => fu.FamilyId == familyId && fu.UserId == invUserId);
+                .FirstOrDefaultAsync(fu =>fu.UserId == invUserId);
             if (exisitingFamilyMember != null)
                 throw new InvalidOperationException("This user is already a member of the family.");
+
 
             var invite = new FamilyInvite
             {
@@ -71,6 +74,7 @@ namespace GyakorlatiFeladat.Services
             var userId = _claimsHandler.GetUserId(user);
 
             var invite = await _context.FamilyInvites
+                .Include(fi =>fi.User)
                 .FirstOrDefaultAsync(i => i.FamilyId == familyId && i.UserId == userId);
             if (invite == null)
                 throw new InvalidOperationException("No invite found.");

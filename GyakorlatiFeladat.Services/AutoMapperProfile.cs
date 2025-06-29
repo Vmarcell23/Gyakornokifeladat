@@ -55,7 +55,8 @@ namespace GyakorlatiFeladat.Services
 
             CreateMap<Menu, MenuDto>()
                 .ForMember(dest => dest.Recipes, opt => opt.MapFrom(src => src.MenuRecipes.Select(mr => mr.Recipe).ToList()))
-                .ForMember(dest => dest.Votes, opt => opt.MapFrom(src => src.Votes.Count)); ;
+                .ForMember(dest => dest.Votes, opt => opt.MapFrom(src => src.Votes.Count))
+                .ForMember(dest => dest.Type, opt =>opt.MapFrom(src =>src.Type.ToString())); ;
             CreateMap<MenuCreateDto, Menu>()
                 .ForMember(dest => dest.isNeeded, opt => opt.MapFrom(src => false)); 
 

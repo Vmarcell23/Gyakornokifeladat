@@ -13,6 +13,7 @@ namespace GyakorlatiFeladat.DataContext.Entities
             public int UserId { get; set; }
             public DateTime SentAt { get; set; }
             public bool IsAccepted { get; set; }
+            public User User { get; set; }
 
     }
 }

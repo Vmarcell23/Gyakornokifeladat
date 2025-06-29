@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Security.Claims;
@@ -21,7 +22,7 @@ namespace GyakorlatiFeladat.Services
     public interface IUserService
     {
         public Task<List<UserDto>> GetAll();
-        public Task<UserDto> Create(UserRegisterDto user);
+        public Task<UserDto> Register(UserRegisterDto user);
         public Task<string> Login(UserLoginDto user);
         public Task<UserDto> Me(ClaimsPrincipal userClaim);
         public Task<UserDto> GetById(int id);
@@ -45,7 +46,7 @@ namespace GyakorlatiFeladat.Services
 
         }
 
-        public async Task<UserDto> Create(UserRegisterDto user)
+        public async Task<UserDto> Register(UserRegisterDto user)
         {
             if (user == null)
                 throw new ArgumentNullException(nameof(user));
@@ -68,7 +69,8 @@ namespace GyakorlatiFeladat.Services
 
         public async Task<string> Login(UserLoginDto userDto)
         {
-            var user = await _context.Users.Include(u => u.FamilyUsers)
+            var user = await _context.Users
+                .Include(u => u.FamilyUsers)
                 .FirstOrDefaultAsync(u => u.Email == userDto.Email);
             if (user == null || !BCrypt.Net.BCrypt.Verify(userDto.Password, user.PasswordHash))
             {
@@ -131,9 +133,9 @@ namespace GyakorlatiFeladat.Services
         {
             if (string.IsNullOrWhiteSpace(email))
                 throw new ArgumentException("Email cannot be empty");
-            var UserWithNewEmail = _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-            if (UserWithNewEmail != null)
-                throw new InvalidOperationException("A user with this email already exists");   
+        
+            if (_context.Users.Any(u => u.Email == email))
+                throw new InvalidOperationException("A user with this email already exists");
 
             var userId = _claimsHandler.GetUserId(claim);
             var user= findbyid(userId);
@@ -153,13 +155,12 @@ namespace GyakorlatiFeladat.Services
             return _mapper.Map<UserDto>(user);
         }
 
-
         //Belső függvény
         private User findbyid(int id)
         {
             var user = _context.Users.Find(id);
             if (user == null)
-                throw new KeyNotFoundException("User not found");
+                throw new KeyNotFoundException($"User with {id} not found");
             return user;
         }
     }

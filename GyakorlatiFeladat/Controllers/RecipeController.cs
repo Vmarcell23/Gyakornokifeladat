@@ -19,11 +19,11 @@ namespace GyakorlatiFeladat.Controllers
 
         [Authorize]
         [HttpPost("create")]
-        public async Task<IActionResult> CreateRecipe([FromBody] RecipeCreateDto recipeCreateDto)
+        public async Task<IActionResult> CreateRecipe([FromBody] RecipeCreateDto createDto)
         {
             try
             {
-                var result = await _recipeService.Create(recipeCreateDto, User);
+                var result = await _recipeService.Create(createDto, User);
                 return Ok(result);
             }
             catch (Exception e)
@@ -47,7 +47,7 @@ namespace GyakorlatiFeladat.Controllers
         }
 
         [Authorize]
-        [HttpGet("my-family/recipes")]
+        [HttpGet("family-recipes")]
         public async Task<IActionResult> GetFamilyRecipes()
         {
             try
@@ -64,11 +64,11 @@ namespace GyakorlatiFeladat.Controllers
 
         [Authorize]
         [HttpPut("update/{id}")]
-        public async Task<IActionResult> UpdateRecipe(int id, [FromBody] RecipeCreateDto recipeCreateDto)
+        public async Task<IActionResult> UpdateRecipe(int id, [FromBody] RecipeCreateDto updateDto)
         {
             try
             {
-                var result = await _recipeService.Update(id, recipeCreateDto, User);
+                var result = await _recipeService.Update(id, updateDto, User);
                 return Ok(result);
             }
             catch (Exception e)
@@ -83,7 +83,7 @@ namespace GyakorlatiFeladat.Controllers
         {
             try
             {
-                var result = await _recipeService.Delete(id, null, User);
+                var result = await _recipeService.Delete(id, User);
                 return Ok(result);
             }
             catch (Exception e)

@@ -360,8 +360,3 @@ MigrationBackup/
 .ionide/
 
 # Fody - auto-generated XML schema
-FodyWeavers.xsd
-/GyakorlatiFeladat/Database.db
-/GyakorlatiFeladat/Database.db
-/GyakorlatiFeladat/Database.db-shm
-/GyakorlatiFeladat/Database.db-wal

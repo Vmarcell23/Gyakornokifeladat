@@ -13,7 +13,7 @@ namespace GyakorlatiFeladat.DataContext.Dtos
         public string? Name { get; set; }
         public List<RecipeInMenuDto> Recipes { get; set; }
         public DateTime When { get; set; }
-        public MenuType Type { get; set; }
+        public string Type { get; set; }
         public bool IsNeeded { get; set; }
         public int Votes { get; set; }
     }

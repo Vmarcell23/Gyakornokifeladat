@@ -81,6 +81,7 @@ namespace GyakorlatiFeladat.Controllers
                 return BadRequest(e.Message);
             }
         }
+
         [HttpPut("remove-admin")]
         public async Task<IActionResult> RemoveAdmin(int userId)
         {
@@ -94,7 +95,8 @@ namespace GyakorlatiFeladat.Controllers
                 return BadRequest(e.Message);
             }
         }
-        [HttpPut("changename/{name}")]
+
+        [HttpPut("change-name/{name}")]
         public async Task<IActionResult> UpdateName(string name)
         {
             try
@@ -121,12 +123,13 @@ namespace GyakorlatiFeladat.Controllers
                 return BadRequest(e.Message);
             }
         }
+
         [HttpDelete("delete")]
-        public async Task<IActionResult> Delete(int familyId)
+        public async Task<IActionResult> Delete()
         {
             try
             {
-                var result = await _familyService.Delete(familyId, User);
+                var result = await _familyService.Delete(User);
                 return Ok(result);
             }
             catch (Exception e)

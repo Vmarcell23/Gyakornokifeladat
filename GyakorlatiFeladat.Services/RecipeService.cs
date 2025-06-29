@@ -15,13 +15,12 @@ namespace GyakorlatiFeladat.Services
 {
     public interface IRecipeService
     {
-        public Task<RecipeDto> Create(RecipeCreateDto recipeCreateDto, ClaimsPrincipal user);
+        public Task<RecipeDto> Create(RecipeCreateDto createDto, ClaimsPrincipal user);
         public Task<List<RecipeDto>> GetAll();
         public Task<List<RecipeDto>> GetFamilyRecipes(ClaimsPrincipal user);
-        public Task<RecipeDto> Update(int id, RecipeCreateDto recipeUpdateDto, ClaimsPrincipal user);
-        public Task<RecipeDto> Delete(int id, RecipeCreateDto recipeUpdateDto, ClaimsPrincipal user);
+        public Task<RecipeDto> Update(int id, RecipeCreateDto updateDto, ClaimsPrincipal user);
+        public Task<RecipeDto> Delete(int id, ClaimsPrincipal user);
 
-        //update,delete,familyben lista
     }
     public class RecipeService : IRecipeService
     {
@@ -33,6 +32,24 @@ namespace GyakorlatiFeladat.Services
             _context = context;
             _mapper = mapper;
             _claimsHandler = claimsHandler;
+        }
+
+        public async Task<RecipeDto> Create(RecipeCreateDto createDto, ClaimsPrincipal user)
+        {
+            if (createDto == null)
+                throw new ArgumentNullException(nameof(createDto));
+            if (string.IsNullOrWhiteSpace(createDto.Name) || createDto.Name == "string")
+                throw new ArgumentException("Recipe name is required");
+
+            var familyId = _claimsHandler.GetFamilyId(user);
+            var userId = _claimsHandler.GetUserId(user);
+            var recipe = _mapper.Map<Recipe>(createDto);
+            recipe.CreatorId = userId;
+            recipe.FamilyId = familyId;
+
+            await _context.Recipes.AddAsync(recipe);
+            await _context.SaveChangesAsync();
+            return _mapper.Map<RecipeDto>(recipe);
         }
 
         public async Task<List<RecipeDto>> GetAll()
@@ -49,61 +66,39 @@ namespace GyakorlatiFeladat.Services
                 .ToListAsync();
             return _mapper.Map<List<RecipeDto>>(recipes);
         }
-
-        public async Task<RecipeDto> Create(RecipeCreateDto recipeCreateDto, ClaimsPrincipal user)
+        
+        public async Task<RecipeDto> Update(int id, RecipeCreateDto updateDto, ClaimsPrincipal user)
         {
-            if (recipeCreateDto == null)
-                throw new ArgumentNullException(nameof(recipeCreateDto));
-            if (string.IsNullOrWhiteSpace(recipeCreateDto.Name))
-                throw new ArgumentException("Recipe name is required");
-
-            var familyId = _claimsHandler.GetFamilyId(user);
-            var userId = _claimsHandler.GetUserId(user);
-            var recipe = _mapper.Map<Recipe>(recipeCreateDto);
-            recipe.CreatorId = userId;
-            recipe.FamilyId = familyId;
-
-            await _context.Recipes.AddAsync(recipe);
-            await _context.SaveChangesAsync();
-            return _mapper.Map<RecipeDto>(recipe);
-        }
-
-        public async Task<RecipeDto> Update(int id, RecipeCreateDto recipeCreateDto, ClaimsPrincipal user)
-        {
-            if (recipeCreateDto == null)
-                throw new ArgumentNullException(nameof(recipeCreateDto));
-            if (string.IsNullOrWhiteSpace(recipeCreateDto.Name))
+            if (updateDto == null)
+                throw new ArgumentNullException(nameof(updateDto));
+            if (string.IsNullOrWhiteSpace(updateDto.Name) || updateDto.Name == "string")
                 throw new ArgumentException("Recipe name is required");
 
             var familyId = _claimsHandler.GetFamilyId(user);
             var recipe = findbyid(id);
-            if (recipe.FamilyId != familyId)
-                throw new UnauthorizedAccessException("You do not have permission to update this recipe.");
-            
             var userId = _claimsHandler.GetUserId(user);
             var userRole = _claimsHandler.GetUserRole(user);
-            
-            if (userRole != Roles.Admin && userRole != Roles.Owner && userId != recipe.CreatorId)
+            if (userRole != Roles.Admin && userRole != Roles.Owner && userId != recipe.CreatorId && recipe.FamilyId != familyId)
                 throw new UnauthorizedAccessException("You do not have permission to update this recipe.");
             
-            recipe = _mapper.Map(recipeCreateDto, recipe);
+            recipe = _mapper.Map(updateDto, recipe);
             _context.Recipes.Update(recipe);
             await _context.SaveChangesAsync();
 
             return _mapper.Map<RecipeDto>(recipe);
         }
 
-        public async Task<RecipeDto> Delete(int id, RecipeCreateDto recipeUpdateDto, ClaimsPrincipal user)
+        public async Task<RecipeDto> Delete(int id, ClaimsPrincipal user)
         {
             var familyId = _claimsHandler.GetFamilyId(user);
             var recipe = findbyid(id);
             if (recipe.FamilyId != familyId)
-                throw new UnauthorizedAccessException("You do not have permission to update this recipe.");
+                throw new UnauthorizedAccessException("You do not have permission to delete this recipe.");
 
             var userId = _claimsHandler.GetUserId(user);
             var userRole = _claimsHandler.GetUserRole(user);
-            if (userRole != Roles.Admin && userRole != Roles.Owner && userId != recipe.CreatorId)
-                throw new UnauthorizedAccessException("You do not have permission to update this recipe.");
+            if (userRole != Roles.Admin && userRole != Roles.Owner && userId != recipe.CreatorId) 
+                throw new UnauthorizedAccessException("You do not have permission to delete this recipe.");
 
             _context.Recipes.Remove(recipe);
             await _context.SaveChangesAsync();
@@ -116,7 +111,7 @@ namespace GyakorlatiFeladat.Services
                 .Include(r => r.family)
                 .FirstOrDefault(r => r.Id == id);
             if (recipe == null)
-                throw new KeyNotFoundException("Recipe not found");
+                throw new KeyNotFoundException($"Recipe with ID {id} not found.");
             return recipe;
         }
     }

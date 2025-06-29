@@ -48,15 +48,15 @@ namespace GyakorlatiFeladat.Services
             if (taskItem == null)
                 throw new ArgumentNullException(nameof(creatDto));
 
-            var allUsersOfFamily = await _context.FamilyUsers
+            var assignedFamilyUsersCount = _context.FamilyUsers
                 .Where(fu => fu.FamilyId == familyId && creatDto.UserIds.Contains(fu.UserId))
-                .ToListAsync();
+                .Count(); //Az összes felhasználó, akit a feladathoz rendelni szeretnénk, és a család tagja
 
             var allUsersAssigned = await _context.Users
                 .Where(u => creatDto.UserIds.Contains(u.Id))
-                .ToListAsync();
-            
-            if(allUsersAssigned.Count() != allUsersOfFamily.Count())
+                .ToListAsync();//Az összes felhasználó , akit a feladathoz rendelni szeretnénk
+
+            if (allUsersAssigned.Count() != assignedFamilyUsersCount)
                 throw new UnauthorizedAccessException("You can only assign tasks to users who are members of your family.");
             
             taskItem.CreatorId = userId;
@@ -68,6 +68,7 @@ namespace GyakorlatiFeladat.Services
             return _mapper.Map<TaskItemDto>(taskItem);
 
         }
+
         public async Task<List<TaskItemDto>> GetAll()
         {
             var taskItems = await _context.Tasks
@@ -117,6 +118,8 @@ namespace GyakorlatiFeladat.Services
             var taskItem = await _context.Tasks
                 .Include(t => t.Users)
                 .FirstOrDefaultAsync(t => t.Id == id && t.FamilyId == familyId);
+            if(taskItem == null)
+                throw new KeyNotFoundException($"Task is not found in family.");
             var usersTask = taskItem.Users.FirstOrDefault(u => u.Id == userId);
             if (usersTask == null && taskItem.Users.Count > 0)
                 throw new UnauthorizedAccessException("You are not assigned to this task.");
@@ -129,8 +132,8 @@ namespace GyakorlatiFeladat.Services
 
         public async Task<TaskItemDto> Update(int id, TaskItemCreateDto updateDto, ClaimsPrincipal user)
         {
-            if (string.IsNullOrWhiteSpace(updateDto.TaskName) || string.IsNullOrWhiteSpace(updateDto.TaskDesc))
-                throw new ArgumentException("TaskName and TaskDesc are required");
+            if (string.IsNullOrWhiteSpace(updateDto.TaskName) || updateDto.TaskName == "string")
+                throw new ArgumentException("TaskName are required");
             
             var familyId = _claimsHandler.GetFamilyId(user);
             var taskItem = findbyid(id);
@@ -144,10 +147,11 @@ namespace GyakorlatiFeladat.Services
 
             var assignedFamilyUsersCount = _context.FamilyUsers
                 .Where(fu => fu.FamilyId == familyId && updateDto.UserIds.Contains(fu.UserId))
-                .Count();
+                .Count();//Az összes felhasználó, akit a feladathoz rendelni szeretnénk, és a család tagja
             var allUsersAssigned = await _context.Users
                 .Where(u => updateDto.UserIds.Contains(u.Id))
-                .ToListAsync();
+                .ToListAsync();//Az összes felhasználó , akit a feladathoz rendelni szeretnénk
+
             if (allUsersAssigned.Count() != assignedFamilyUsersCount)
                 throw new UnauthorizedAccessException("You can only assign tasks to users who are members of your family.");
 
@@ -166,7 +170,7 @@ namespace GyakorlatiFeladat.Services
             var familyId = _claimsHandler.GetFamilyId(user);
             var taskItem = findbyid(id);
             if (familyId != taskItem.FamilyId)
-                throw new UnauthorizedAccessException("You do not have permission to update this task.");
+                throw new UnauthorizedAccessException("You do not have permission to delete this task.");
 
             var userRole = _claimsHandler.GetUserRole(user);
             var userId = _claimsHandler.GetUserId(user);

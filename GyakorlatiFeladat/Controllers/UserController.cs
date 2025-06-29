@@ -30,7 +30,7 @@ namespace GyakorlatiFeladat.Controllers
         {
             try
             {
-                var result = await _userService.Create(user);
+                var result = await _userService.Register(user);
                 return Ok(result);
             }
             catch (Exception e)
@@ -39,6 +39,7 @@ namespace GyakorlatiFeladat.Controllers
                 return BadRequest(e.Message);
             }
         }
+
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] UserLoginDto user)
         {
@@ -53,6 +54,7 @@ namespace GyakorlatiFeladat.Controllers
                 throw;
             }
         }
+        
         [Authorize]
         [HttpGet("me")]
         public async Task<IActionResult> Me()

@@ -75,7 +75,7 @@ namespace GyakorlatiFeladat.Controllers
                 return BadRequest(e.Message);
             }
         }
-
+        
         [Authorize]
         [HttpPut("update/{id}")]
         public async Task<IActionResult> UpdateMenu(int id, [FromBody] MenuCreateDto updateDto)

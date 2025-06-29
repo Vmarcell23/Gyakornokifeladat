@@ -19,11 +19,11 @@ namespace GyakorlatiFeladat.Controllers
 
         [Authorize]
         [HttpPost("create")]
-        public async Task<IActionResult> CreateItem([FromBody] ShoppingItemCreateDto shoppingItemCreateDto)
+        public async Task<IActionResult> CreateItem([FromBody] ShoppingItemCreateDto createDto)
         {
             try
             {
-                var result = await _shoppingItemService.Create(shoppingItemCreateDto,User);
+                var result = await _shoppingItemService.Create(createDto,User);
                 return Ok(result);
             }
             catch (Exception e)
@@ -34,12 +34,12 @@ namespace GyakorlatiFeladat.Controllers
         }
 
         [Authorize]
-        [HttpPut("vote/{id}")]
-        public async Task<IActionResult> VoteItem(int itemId)
+        [HttpPost("vote/{id}")]
+        public async Task<IActionResult> VoteItem(int id)
         {
             try
             {
-                var result = await _shoppingItemService.Vote(itemId, User);
+                var result = await _shoppingItemService.Vote(id, User);
                 return Ok(result);
             }
             catch (Exception e)
@@ -47,8 +47,7 @@ namespace GyakorlatiFeladat.Controllers
                 return BadRequest(e.Message);
             }
         }
-
-
+        
         [HttpGet("items")]
         public async Task<IActionResult> GetAllItems()
         {
@@ -62,8 +61,9 @@ namespace GyakorlatiFeladat.Controllers
                 return BadRequest(e.Message);
             }
         }
+
         [Authorize]
-        [HttpGet("items/my-family")]
+        [HttpGet("family-items")]
         public async Task<IActionResult> GetAllItemsInFamily()
         {
             try
@@ -90,6 +90,7 @@ namespace GyakorlatiFeladat.Controllers
                 return BadRequest(e.Message);
             }
         }
+
         [HttpPut("update/{id}")]
         public async Task<IActionResult> UpdateItem(int id, [FromBody] ShoppingItemCreateDto updateDto)
         {

@@ -40,6 +40,8 @@ namespace GyakorlatiFeladat.DataContext.Context
                 .HasOne(mr => mr.Recipe)
                 .WithMany(r => r.MenuRecipes)
                 .HasForeignKey(mr => mr.RecipeId);
+
+
         }
     }
 }
